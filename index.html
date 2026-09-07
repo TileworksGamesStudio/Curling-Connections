@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="description" content="Button Curl: The Canadian connections word puzzle game. Group 16 words into 4 categories before making 4 mistakes.">
+  <meta name="theme-color" content="#075985">
+  <title>BUTTON CURL — Word Connections</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="ice-house-bg" aria-hidden="true">
+    <div class="ring ring-12ft"></div>
+    <div class="ring ring-8ft"></div>
+    <div class="ring ring-4ft"></div>
+    <div class="ring ring-button"></div>
+    <div class="sheet-center-line"></div>
+    <div class="sheet-tee-line"></div>
+    <div class="sheet-hog-line"></div>
+  </div>
+  <div class="noise-overlay" aria-hidden="true"></div>
+
+  <div id="app-container">
+    <header class="neo-header" role="banner">
+      <div class="header-side header-left">
+        <button id="btn-home" class="neo-icon-btn hidden" type="button" aria-label="Main Menu" title="Main Menu">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+          </svg>
+        </button>
+      </div>
+
+      <div class="header-center">
+        <h1 class="neo-title">
+          <span>BUTTON CURL</span>
+          <span class="can-leaf" aria-hidden="true">🍁</span>
+        </h1>
+        <span class="sub-badge" id="current-screen-badge">DAILY PUZZLE</span>
+      </div>
+
+      <div class="header-side header-right">
+        <button id="btn-stats-toggle" class="neo-icon-btn" type="button" aria-label="View Statistics" title="Statistics">
+          <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="20" x2="18" y2="10"></line>
+            <line x1="12" y1="20" x2="12" y2="4"></line>
+            <line x1="6" y1="20" x2="6" y2="14"></line>
+          </svg>
+        </button>
+        <button id="btn-sound-toggle" class="neo-icon-btn" type="button" aria-label="Toggle Sound Effects" title="Sound Effects">
+          <span id="sound-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+              <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+            </svg>
+          </span>
+        </button>
+      </div>
+    </header>
+
+    <main id="view-viewport" role="main">
+      <section id="view-menu" class="screen-view active" aria-label="Main Menu">
+        <div class="menu-hero">
+          <div class="rock-emblem-container" aria-hidden="true">
+            <div class="rock-emblem">
+              <div class="granite-ring">
+                <div class="granite-striated-surface">
+                  <div class="granite-core">
+                    <div class="stone-handle-bracket"></div>
+                    <div class="stone-handle-top"></div>
+                    <div class="stone-bolt"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="rock-shadow"></div>
+          </div>
+          
+          <div class="hero-text-wrap">
+            <span class="hero-kicker">CANADIAN WORD PUZZLE</span>
+            <h2 class="hero-headline">FIND GROUPS<br>OF FOUR</h2>
+            <p class="hero-desc">Find four groups of four related words without making four mistakes.</p>
+          </div>
+        </div>
+
+        <div class="menu-actions">
+          <button id="menu-btn-daily" class="neo-btn neo-btn-primary" type="button">
+            <div class="btn-text-group">
+              <span class="btn-label">PLAY TODAY'S PUZZLE</span>
+              <span class="btn-subtext" id="daily-draw-meta">Puzzle #1</span>
+            </div>
+            <span class="btn-meta-pill" id="daily-status-pill">PLAY</span>
+          </button>
+          
+          <button id="menu-btn-vault" class="neo-btn neo-btn-secondary" type="button">
+            <div class="btn-text-group">
+              <span class="btn-label">ARCHIVE</span>
+              <span class="btn-subtext">Past Puzzles</span>
+            </div>
+            <span class="btn-meta-pill" id="vault-count-badge">0 PUZZLES</span>
+          </button>
+
+          <button id="menu-btn-instructions" class="neo-btn neo-btn-tertiary" type="button">
+            <div class="btn-text-group">
+              <span class="btn-label">HOW TO PLAY</span>
+              <span class="btn-subtext">Rules &amp; Difficulty Levels</span>
+            </div>
+            <span class="btn-arrow" aria-hidden="true">&rarr;</span>
+          </button>
+        </div>
+
+        <div class="menu-footer-hint">
+          <span>Select four items that share a common connection.</span>
+        </div>
+      </section>
+
+      <section id="view-game" class="screen-view" aria-label="Game Board">
+        <div class="game-meta-bar">
+          <div class="meta-item">
+            <span class="meta-target-pip"></span>
+            <span class="meta-title" id="puzzle-label">PUZZLE #1</span>
+          </div>
+          <div class="meta-item text-right">
+            <span id="status-indicator" class="status-indicator" aria-live="polite">SELECT 4 WORDS</span>
+          </div>
+        </div>
+
+        <div id="completed-categories" class="completed-rack" aria-live="polite"></div>
+
+        <div id="puzzle-grid" class="connections-grid" role="grid" aria-label="Word Selection Grid"></div>
+
+        <div class="mistakes-container" aria-label="Mistakes Remaining Tracker">
+          <span class="mistakes-label">MISTAKES REMAINING:</span>
+          <div id="mistakes-counter" class="curling-stones-rack" role="status" aria-label="4 mistakes remaining">
+            <div class="stone-life active" data-index="0" title="1">
+              <div class="stone-body"></div>
+            </div>
+            <div class="stone-life active" data-index="1" title="2">
+              <div class="stone-body"></div>
+            </div>
+            <div class="stone-life active" data-index="2" title="3">
+              <div class="stone-body"></div>
+            </div>
+            <div class="stone-life active" data-index="3" title="4">
+              <div class="stone-body"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="game-controls">
+          <button id="btn-shuffle" class="neo-btn-game" type="button" aria-label="Shuffle Words">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="16 3 21 3 21 8"></polyline>
+              <line x1="4" y1="20" x2="21" y2="3"></line>
+              <polyline points="21 16 21 21 16 21"></polyline>
+              <line x1="15" y1="15" x2="21" y2="21"></line>
+              <line x1="4" y1="4" x2="9" y2="9"></line>
+            </svg>
+            <span>SHUFFLE</span>
+          </button>
+          <button id="btn-deselect" class="neo-btn-game" type="button" aria-label="Clear Selection">
+            <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="15" y1="9" x2="9" y2="15"></line>
+              <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+            <span>CLEAR</span>
+          </button>
+          <button id="btn-submit" class="neo-btn-game neo-btn-submit" type="button" disabled aria-label="Submit Selected Words">
+            <span>SUBMIT</span>
+          </button>
+        </div>
+      </section>
+
+      <section id="view-vault" class="screen-view" aria-label="Puzzle Archive">
+        <div class="vault-hero">
+          <div class="vault-badge-title">
+            <h2 class="section-title">ARCHIVE</h2>
+            <span class="vault-tag">PAST PUZZLES</span>
+          </div>
+          <p class="section-desc">Test your word association skills on previous puzzles.</p>
+        </div>
+        <div id="vault-list" class="vault-grid" role="list"></div>
+      </section>
+
+      <section id="view-instructions" class="screen-view" aria-label="Rules and Guide">
+        <div class="instructions-card neo-card">
+          <div class="card-header-row">
+            <span class="guide-tag">GUIDE</span>
+            <h2 class="card-title">HOW TO PLAY</h2>
+          </div>
+          
+          <ul class="rules-list">
+            <li>
+              <span class="rule-bullet">1</span>
+              <span>Find <strong>four groups of four words</strong> that share a common connection.</span>
+            </li>
+            <li>
+              <span class="rule-bullet">2</span>
+              <span>Select four words and tap <strong>SUBMIT</strong> to check your guess.</span>
+            </li>
+            <li>
+              <span class="rule-bullet">3</span>
+              <span>Categories cover vocabulary, Canadian references, sports, and clever wordplay.</span>
+            </li>
+            <li>
+              <span class="rule-bullet">4</span>
+              <span>Find the groups without making <strong>4 mistakes</strong>. Each puzzle has exactly one valid solution.</span>
+            </li>
+          </ul>
+
+          <div class="legend-header">CATEGORY DIFFICULTY SCALE</div>
+          <div class="category-difficulty-legend">
+            <div class="legend-row level-0">
+              <span class="legend-swatch"></span>
+              <span class="legend-category">STRAIGHTFORWARD</span>
+              <span class="legend-difficulty">Direct connection</span>
+            </div>
+            <div class="legend-row level-1">
+              <span class="legend-swatch"></span>
+              <span class="legend-category">MEDIUM</span>
+              <span class="legend-difficulty">Common traits</span>
+            </div>
+            <div class="legend-row level-2">
+              <span class="legend-swatch"></span>
+              <span class="legend-category">HARD</span>
+              <span class="legend-difficulty">Subtle association</span>
+            </div>
+            <div class="legend-row level-3">
+              <span class="legend-swatch"></span>
+              <span class="legend-category">TRICKY</span>
+              <span class="legend-difficulty">Wordplay or double meanings</span>
+            </div>
+          </div>
+          
+          <button id="btn-close-instructions" class="neo-btn neo-btn-primary full-width" type="button">BACK TO MENU</button>
+        </div>
+      </section>
+    </main>
+
+    <div id="toast-banner" class="toast-popup" role="status" aria-live="polite" aria-atomic="true"></div>
+
+    <div id="stats-modal" class="neo-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="stats-modal-title">
+      <div class="neo-modal" role="document">
+        <div class="modal-header">
+          <span class="modal-badge">RECORDS</span>
+          <button id="btn-close-stats" class="modal-close-x" type="button" aria-label="Close Statistics">&times;</button>
+        </div>
+        <h2 id="stats-modal-title" class="modal-title">STATISTICS</h2>
+        <p class="modal-subtitle-stat">Overall puzzle performance</p>
+        
+        <div class="stats-kpi-grid">
+          <div class="kpi-box">
+            <span class="kpi-num" id="stat-played">0</span>
+            <span class="kpi-lbl">Played</span>
+          </div>
+          <div class="kpi-box">
+            <span class="kpi-num" id="stat-win-rate">0%</span>
+            <span class="kpi-lbl">Win %</span>
+          </div>
+          <div class="kpi-box">
+            <span class="kpi-num" id="stat-current-streak">0</span>
+            <span class="kpi-lbl">Streak</span>
+          </div>
+          <div class="kpi-box">
+            <span class="kpi-num" id="stat-max-streak">0</span>
+            <span class="kpi-lbl">Max Streak</span>
+          </div>
+        </div>
+
+        <div class="dist-chart-container">
+          <h3 class="dist-title">MISTAKES REMAINING AT VICTORY</h3>
+          <div class="dist-bars" id="dist-bars-rack"></div>
+        </div>
+
+        <div class="modal-actions">
+          <button id="btn-stats-return" class="neo-btn neo-btn-primary full-width" type="button">CLOSE</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="game-modal" class="neo-modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="neo-modal" role="document">
+        <div class="modal-banner" id="modal-banner">RESULTS</div>
+        <h2 id="modal-title" class="modal-title">PUZZLE SOLVED!</h2>
+        <p id="modal-sub" class="modal-sub">You found all four categories.</p>
+        
+        <div id="share-grid-preview" class="share-grid" aria-label="Emoji Scorecard"></div>
+
+        <div class="modal-actions">
+          <button id="btn-share-result" class="neo-btn neo-btn-primary full-width" type="button">
+            <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="18" cy="5" r="3"></circle>
+              <circle cx="6" cy="12" r="3"></circle>
+              <circle cx="18" cy="19" r="3"></circle>
+              <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+              <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+            </svg>
+            <span>SHARE SCORECARD</span>
+          </button>
+          <button id="btn-modal-stats" class="neo-btn neo-btn-secondary full-width" type="button">VIEW STATISTICS</button>
+          <button id="btn-modal-exit" class="neo-btn neo-btn-tertiary full-width" type="button">MAIN MENU</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
