@@ -156,7 +156,7 @@
   window.addEventListener('pointerdown', unlockAudio, { once: true });
   window.addEventListener('keydown', unlockAudio, { once: true });
 
-  const EPOCH_DATE = new Date('2025-01-01T00:00:00');
+  const EPOCH_DATE = new Date('2026-09-07T00:00:00');
   const now = new Date();
   const diffDays = Math.floor((now - EPOCH_DATE) / (1000 * 60 * 60 * 24));
   const TODAY_INDEX = Math.max(0, diffDays);
@@ -363,6 +363,42 @@
     }
   ];
 
+  const ADDITIONAL_PUZZLES = [
+    [['DELIVERY TERMS', ['BACKSWING', 'RELEASE', 'SLIDE', 'FOLLOW-THROUGH'], 0], ['SHOT WEIGHTS', ['DRAW', 'CONTROL', 'HEAVY', 'TAKEOUT'], 1], ['THINGS WITH A BAND', ['STONE', 'RING', 'MARCH', 'WEDDING'], 2], ['WORDS AFTER ICE', ['MAKER', 'TIME', 'HOUSE', 'BREAK'], 3]],
+    [['ICE-MAKER ACTIONS', ['PEBBLE', 'NIP', 'SCRAPE', 'FLOOD'], 0], ['SHEET CONDITIONS', ['SPEED', 'CURL', 'FROST', 'HUMIDITY'], 1], ['THINGS THAT CAN BE FRESH', ['ICE', 'START', 'POWDER', 'PAINT'], 2], ['CLUBHOUSE ORDERS', ['ALE', 'COFFEE', 'CIDER', 'TEA'], 3]],
+    [['CONTACT SHOTS', ['WICK', 'CAROM', 'CHIP', 'RAISE'], 0], ['WAYS TO PROTECT A STONE', ['GUARD', 'COVER', 'FREEZE', 'BURIED'], 1], ['WORDS BEFORE OFF', ['TAKE', 'SPIN', 'SHOW', 'SIGN'], 2], ['THINGS THAT ROLL', ['STONE', 'DICE', 'BARREL', 'TIDE'], 3]],
+    [['TEAM POSITIONS', ['LEAD', 'SECOND', 'VICE', 'SKIP'], 0], ['THINGS A SKIP CALLS', ['LINE', 'WEIGHT', 'HARD', 'WHOA'], 1], ['KINDS OF SUPPORT', ['BACK', 'SIDE', 'MORAL', 'TECHNICAL'], 2], ['WORDS AFTER TEAM', ['MATE', 'WORK', 'SPORT', 'BUILDING'], 3]],
+    [['SCORING RESULTS', ['BLANK', 'STEAL', 'FORCE', 'DEUCE'], 0], ['TOURNAMENT STAGES', ['ROUND', 'PLAYOFF', 'SEMI', 'FINAL'], 1], ['THINGS WITH A CROWN', ['KING', 'QUEEN', 'TOOTH', 'CHAMPION'], 2], ['WORDS BEFORE ROBIN', ['BATMAN', 'RED', 'PET', 'HOOD'], 3]],
+    [['RULES OFFICIALS MAY CHECK', ['HOG', 'BURN', 'MEASURE', 'LINE'], 0], ['PROTECTED AREAS', ['ZONE', 'HOUSE', 'FORT', 'PARK'], 1], ['WORDS AFTER FREE', ['GUARD', 'THROW', 'FALL', 'STYLE'], 2], ['THINGS THAT CAN BE DEAD', ['HEAT', 'CENTER', 'LINE', 'SERIOUS'], 3]],
+    [['MIXED DOUBLES TERMS', ['POWER', 'PRE-PLACED', 'FIVE', 'EIGHT'], 0], ['CURLING FORMATS', ['JUNIOR', 'WHEELCHAIR', 'SINGLES', 'TEAM'], 1], ['THINGS WITH A HAMMER', ['NAIL', 'THOR', 'MCFLY', 'CLOCK'], 2], ['WORDS AFTER EXTRA', ['END', 'POINT', 'LARGE', 'CREDIT'], 3]],
+    [['HOUSE TARGETS', ['BUTTON', 'FOUR', 'EIGHT', 'TWELVE'], 0], ['GUARD LOCATIONS', ['CENTER', 'CORNER', 'TOP', 'LONG'], 1], ['THINGS THAT CAN BE OPEN', ['HOUSE', 'ICE', 'END', 'SECRET'], 2], ['WORDS BEFORE POINT', ['MATCH', 'TURNING', 'VIEW', 'COUNTER'], 3]],
+    [['CURLING HISTORY', ['SCOTLAND', 'AILSA', 'LOCH', 'BONSPIEL'], 0], ['CANADIAN SYMBOLS', ['MAPLE', 'MOOSE', 'LOONIE', 'BEAVER'], 1], ['WORDS AFTER CLUB', ['HOUSE', 'SANDWICH', 'SODA', 'NIGHT'], 2], ['THINGS THAT CAN BE SPIRITED', ['HORSE', 'AWAY', 'TEAM', 'DRINK'], 3]],
+    [['BROOM PARTS', ['HEAD', 'PAD', 'SHAFT', 'GRIP'], 0], ['FOOTWEAR FEATURES', ['SLIDER', 'GRIPPER', 'SOLE', 'LACE'], 1], ['THINGS THAT CAN BE TAPPED', ['BACK', 'SCREEN', 'KEG', 'BUTTON'], 2], ['WORDS AFTER SHOE', ['BOX', 'HORN', 'STRING', 'LEATHER'], 3]],
+    [['ADVANCED SHOTS', ['DOUBLE', 'TRIPLE', 'PEEL', 'PROMOTE'], 0], ['STONE MOVEMENT', ['ROLL', 'CARRY', 'FINISH', 'FALL'], 1], ['THINGS THAT CAN BE ANGLED', ['RAISE', 'BRUSH', 'MIRROR', 'PARKING'], 2], ['WORDS BEFORE ROLL', ['ROCK', 'CREDIT', 'JELLY', 'DRUM'], 3]],
+    [['ICE SCIENCE', ['FRICTION', 'TEMPERATURE', 'HUMIDITY', 'GRAVITY'], 0], ['THINGS THAT MELT', ['PEBBLE', 'SNOW', 'BUTTER', 'MOMENT'], 1], ['WORDS AFTER RUNNING', ['BAND', 'BACK', 'MATE', 'WATER'], 2], ['THINGS THAT CAN BE POLISHED', ['STONE', 'SHOE', 'IMAGE', 'REPUTATION'], 3]],
+    [['SHOT PLANNING', ['LINE', 'WEIGHT', 'ANGLE', 'TARGET'], 0], ['WAYS TO SCORE', ['DRAW', 'STEAL', 'FORCE', 'TAKE'], 1], ['THINGS THAT CAN BE BLANK', ['END', 'PAGE', 'CHECKET', 'EXPRESSION'], 2], ['WORDS BEFORE BOARD', ['SCORE', 'DIVE', 'IRON', 'SOUND'], 3]],
+    [['CURLING ETIQUETTE', ['HANDSHAKE', 'HONESTY', 'RESPECT', 'CONCEDE'], 0], ['POST-GAME TRADITIONS', ['BROOMSTACKING', 'SOCIAL', 'DRINK', 'RECAP'], 1], ['THINGS THAT CAN BE GOOD', ['CURLING', 'SPORT', 'LINE', 'MORNING'], 2], ['WORDS AFTER SPIRIT', ['OF', 'LEVEL', 'ANIMAL', 'WEEK'], 3]],
+    [['STONE ANATOMY', ['HANDLE', 'BOLT', 'CUP', 'BAND'], 0], ['GRANITE SOURCES', ['AILSA', 'QUARRY', 'ISLAND', 'ROCK'], 1], ['THINGS THAT CAN BE RUNNING', ['LATE', 'WILD', 'COMMENTARY', 'MATE'], 2], ['WORDS BEFORE STONE', ['CURSING', 'MILE', 'ROLLING', 'KEY'], 3]],
+    [['SHOT CALLS', ['HURRY', 'WHOA', 'CLEAN', 'HARD'], 0], ['WAYS TO MOVE A STONE', ['HIT', 'RAISE', 'WICK', 'DRAW'], 1], ['THINGS THAT CAN BE HARD', ['SWEEP', 'ROCK', 'STOP', 'COPY'], 2], ['WORDS AFTER BACK', ['LINE', 'SWING', 'STOP', 'YARD'], 3]],
+    [['SHEET MARKINGS', ['HOG', 'TEE', 'CENTER', 'BACK'], 0], ['SCORING AREAS', ['BUTTON', 'FOUR', 'EIGHT', 'TWELVE'], 1], ['THINGS WITH A LINE', ['CREDIT', 'FINISH', 'PICKUP', 'DEAD'], 2], ['WORDS BEFORE SIDE', ['BOARD', 'WALK', 'KICK', 'INSIDE'], 3]],
+    [['ICE-MAKER TOOLS', ['NIPPER', 'SCRAPER', 'MOP', 'PEBBLER'], 0], ['ICE TEXTURES', ['PEBBLE', 'FROST', 'SHEEN', 'RIPPLE'], 1], ['THINGS THAT CAN BE SMOOTH', ['ICE', 'TALK', 'JAZZ', 'OPERATOR'], 2], ['WORDS AFTER SURFACE', ['AREA', 'TENSION', 'LEVEL', 'MOUNT'], 3]],
+    [['TACTICAL COVER', ['GUARD', 'SCREEN', 'SHIELD', 'BLOCK'], 0], ['OPENING SHOTS', ['DRAW', 'PEEL', 'TICK', 'RAISE'], 1], ['THINGS THAT CAN BE CENTERED', ['STONE', 'TEXT', 'COURT', 'ATTENTION'], 2], ['WORDS BEFORE SHOT', ['FOOT', 'MOON', 'SLAP', 'CALL'], 3]],
+    [['CURLING COMPETITION', ['MATCH', 'END', 'SCORE', 'ROUND'], 0], ['CHAMPIONSHIP PRIZES', ['BROOM', 'CUP', 'MEDAL', 'TROPHY'], 1], ['THINGS WITH A LEAD', ['TEAM', 'PENCIL', 'STORY', 'HORSE'], 2], ['WORDS AFTER PLAY', ['OFF', 'BOOK', 'GROUND', 'CALL'], 3]],
+    [['DELIVERY BALANCE', ['HACK', 'SLIDE', 'STABILIZER', 'GRIPPER'], 0], ['RELEASE DETAILS', ['HANDLE', 'ROTATION', 'LINE', 'TIMING'], 1], ['THINGS THAT CAN BE CLEAN', ['ICE', 'SWEEP', 'SLATE', 'RECORD'], 2], ['WORDS BEFORE POWER', ['PLAY', 'NAP', 'CUP', 'HOUSE'], 3]],
+    [['ADVANCED POSITIONING', ['PORT', 'BITE', 'ANGLE', 'RAISE'], 0], ['STONE FINISHES', ['ROLL', 'FREEZE', 'DRAW', 'PEEL'], 1], ['THINGS THAT CAN BE WICKED', ['SHOT', 'SMART', 'WITCH', 'WEATHER'], 2], ['WORDS AFTER POINT', ['FOUR', 'VIEW', 'BREAK', 'COUNTER'], 3]],
+    [['CURLING ROLES', ['SKIP', 'LEAD', 'SECOND', 'VICE'], 0], ['PEOPLE WHO CALL', ['COACH', 'REFEREE', 'ANNOUNCER', 'JUDGE'], 1], ['THINGS THAT CAN BE VICE', ['PRESIDENT', 'SQUAD', 'VERSA', 'LORD'], 2], ['WORDS BEFORE HOUSE', ['CLUB', 'FULL', 'OPEN', 'POWER'], 3]],
+    [['GAME-DAY CLOCK', ['END', 'TIME', 'SHOT', 'SPLIT'], 0], ['WAYS TO WIN', ['STEAL', 'SCORE', 'FORCE', 'OUTPLAY'], 1], ['THINGS THAT CAN BE EXTRA', ['LARGE', 'CREDIT', 'TERRESTRIAL', 'SPECIAL'], 2], ['WORDS AFTER MATCH', ['POINT', 'PLAY', 'BOOK', 'BOX'], 3]],
+    [['CURLING WORDPLAY', ['BUTTON', 'HAMMER', 'GUARD', 'HOUSE'], 0], ['THINGS THAT CAN BE DRAWN', ['STONE', 'CARD', 'BATH', 'CONCLUSION'], 1], ['WORDS BEFORE ROCK', ['PUNK', 'BED', 'PAPER', 'CURLING'], 2], ['THINGS THAT CAN BE SWEPT', ['ICE', 'FLOOR', 'HAIR', 'EVIDENCE'], 3]],
+    [['MASTER STRATEGY', ['ADAPT', 'READ', 'PLAN', 'EXECUTE'], 0], ['RISK LEVELS', ['SAFE', 'BOLD', 'HIGH', 'CALCULATED'], 1], ['THINGS THAT CAN BE PRECISION', ['SHOT', 'DRIVING', 'SURGERY', 'TOOLS'], 2], ['WORDS AFTER CURLING', ['STONE', 'IRON', 'CLUB', 'BROOM'], 3]]
+  ].map((groups, index) => ({
+    id: `puzzle-${index + 8}`,
+    number: index + 8,
+    name: `Puzzle #${index + 8}`,
+    categories: groups.map(([title, words, level]) => ({ title, words, level }))
+  }));
+
+  PUZZLE_SETS.push(...ADDITIONAL_PUZZLES);
+
   const STORAGE_KEY = "button_curl_state_v3";
 
   function getDefaultState() {
@@ -521,14 +557,14 @@
       }
     }
 
-    vaultCountBadge.textContent = `${PUZZLE_SETS.length} PUZZLES`;
+    vaultCountBadge.textContent = `${Math.max(0, daily.number - 1)} PUZZLES`;
   }
 
   function renderVaultList() {
     vaultList.innerHTML = '';
     const daily = getDailyPuzzle();
 
-    PUZZLE_SETS.forEach(p => {
+    PUZZLE_SETS.filter(p => p.number < daily.number).forEach(p => {
       const record = AppState.solvedPuzzles[p.id];
       const inProgress = AppState.inProgress[p.id];
       const isToday = p.id === daily.id;
