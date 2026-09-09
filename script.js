@@ -1,1176 +1,1227 @@
-(function () {
-  'use strict';
+/**
+ * CURLING PUZZLES — CONNECTIONS GAME ENGINE
+ * Architecture:
+ * - Deterministic Calendar Scheduling (Baseline: 8 Sept 2026 = Day 0)
+ * - 2D Curling Stone Collision Physics on Ambient Ice Canvas (Fixed Timestep 1/60s)
+ * - Cached Procedural Granite & Gooseneck Handle Sprites (Red & Yellow Teams)
+ * - Synthetic Web Audio SFX (Zero External Dependencies)
+ * - Versioned LocalStorage State Persistence
+ * - Strict Future Content Privacy
+ */
 
-  class SoundFX {
+(function () {
+  "use strict";
+
+  /* ==========================================================================
+     1. CONSTANTS & CONFIGURATION
+     ========================================================================== */
+  const STORAGE_KEY = "curling_connections_player_state_v2";
+  const STORAGE_VERSION = 2;
+  const ANCHOR_DATE_UTC = Date.UTC(2026, 8, 8); // Sept 8, 2026 UTC = Day 0
+  const MAX_MISTAKES = 4;
+
+  /* ==========================================================================
+     2. SYNTHETIC AUDIO ENGINE (Web Audio API)
+     ========================================================================== */
+  class SoundController {
     constructor() {
       this.ctx = null;
       this.enabled = true;
     }
 
     init() {
-      if (!this.ctx) {
+      if (!this.ctx && (window.AudioContext || window.webkitAudioContext)) {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (AudioCtx) {
-          this.ctx = new AudioCtx();
-        }
-      }
-      if (this.ctx && this.ctx.state === 'suspended') {
-        this.ctx.resume().catch(() => {});
+        this.ctx = new AudioCtx();
       }
     }
 
-    playTap() {
+    toggle() {
+      this.enabled = !this.enabled;
+      return this.enabled;
+    }
+
+    play(type) {
       if (!this.enabled) return;
-      this.init();
-      if (!this.ctx) return;
       try {
+        this.init();
+        if (!this.ctx) return;
+        if (this.ctx.state === "suspended") {
+          this.ctx.resume();
+        }
+
+        const now = this.ctx.currentTime;
         const osc = this.ctx.createOscillator();
         const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(520, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(160, this.ctx.currentTime + 0.04);
-        gain.gain.setValueAtTime(0.18, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.04);
         osc.connect(gain);
         gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.04);
-      } catch (e) {}
-    }
 
-    playDeselect() {
-      if (!this.enabled) return;
-      this.init();
-      if (!this.ctx) return;
-      try {
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(280, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(100, this.ctx.currentTime + 0.035);
-        gain.gain.setValueAtTime(0.14, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.035);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.035);
-      } catch (e) {}
-    }
+        switch (type) {
+          case "tap":
+            // Crisp stone click
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(560, now);
+            osc.frequency.exponentialRampToValueAtTime(840, now + 0.04);
+            gain.gain.setValueAtTime(0.12, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+            osc.start(now);
+            osc.stop(now + 0.05);
+            break;
 
-    playShuffle() {
-      if (!this.enabled) return;
-      this.init();
-      if (!this.ctx) return;
-      try {
-        const bufferSize = Math.floor(this.ctx.sampleRate * 0.07);
-        const buffer = this.ctx.createBuffer(1, bufferSize, this.ctx.sampleRate);
-        const data = buffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) {
-          data[i] = Math.random() * 2 - 1;
+          case "deselect":
+            // Soft stone slide back
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(440, now);
+            osc.frequency.exponentialRampToValueAtTime(290, now + 0.05);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+            osc.start(now);
+            osc.stop(now + 0.06);
+            break;
+
+          case "solve":
+            // Harmonious curling 4-note chime
+            [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
+              const subOsc = this.ctx.createOscillator();
+              const subGain = this.ctx.createGain();
+              subOsc.connect(subGain);
+              subGain.connect(this.ctx.destination);
+              subOsc.frequency.setValueAtTime(freq, now + idx * 0.06);
+              subGain.gain.setValueAtTime(0.12, now + idx * 0.06);
+              subGain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.06 + 0.35);
+              subOsc.start(now + idx * 0.06);
+              subOsc.stop(now + idx * 0.06 + 0.36);
+            });
+            break;
+
+          case "mistake":
+            // Low double bump
+            osc.type = "triangle";
+            osc.frequency.setValueAtTime(170, now);
+            osc.frequency.setValueAtTime(135, now + 0.08);
+            gain.gain.setValueAtTime(0.18, now);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+            osc.start(now);
+            osc.stop(now + 0.23);
+            break;
+
+          case "win":
+            // Celebratory fanfare
+            [523.25, 659.25, 783.99, 1046.5, 1318.51].forEach((freq, idx) => {
+              const subOsc = this.ctx.createOscillator();
+              const subGain = this.ctx.createGain();
+              subOsc.connect(subGain);
+              subGain.connect(this.ctx.destination);
+              subOsc.frequency.setValueAtTime(freq, now + idx * 0.08);
+              subGain.gain.setValueAtTime(0.15, now + idx * 0.08);
+              subGain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.08 + 0.6);
+              subOsc.start(now + idx * 0.08);
+              subOsc.stop(now + idx * 0.08 + 0.62);
+            });
+            break;
         }
-        const noise = this.ctx.createBufferSource();
-        noise.buffer = buffer;
-        const filter = this.ctx.createBiquadFilter();
-        filter.type = 'bandpass';
-        filter.frequency.value = 1400;
-        filter.Q.value = 1.8;
-        const gain = this.ctx.createGain();
-        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.07);
-        noise.connect(filter);
-        filter.connect(gain);
-        gain.connect(this.ctx.destination);
-        noise.start();
-      } catch (e) {}
-    }
-
-    playError() {
-      if (!this.enabled) return;
-      this.init();
-      if (!this.ctx) return;
-      try {
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(130, this.ctx.currentTime);
-        osc.frequency.setValueAtTime(95, this.ctx.currentTime + 0.09);
-        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.2);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.2);
-      } catch (e) {}
-    }
-
-    playSuccess() {
-      if (!this.enabled) return;
-      this.init();
-      if (!this.ctx) return;
-      try {
-        const notes = [523.25, 659.25, 783.99];
-        notes.forEach((freq, idx) => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.06);
-          gain.gain.setValueAtTime(0.15, this.ctx.currentTime + idx * 0.06);
-          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.06 + 0.2);
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(this.ctx.currentTime + idx * 0.06);
-          osc.stop(this.ctx.currentTime + idx * 0.06 + 0.2);
-        });
-      } catch (e) {}
-    }
-
-    playWin() {
-      if (!this.enabled) return;
-      this.init();
-      if (!this.ctx) return;
-      try {
-        const fanfare = [523.25, 659.25, 783.99, 1046.50];
-        fanfare.forEach((freq, idx) => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.09);
-          gain.gain.setValueAtTime(0.22, this.ctx.currentTime + idx * 0.09);
-          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.09 + 0.4);
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.start(this.ctx.currentTime + idx * 0.09);
-          osc.stop(this.ctx.currentTime + idx * 0.09 + 0.4);
-        });
-      } catch (e) {}
-    }
-  }
-
-  const sfx = new SoundFX();
-
-  const unlockAudio = () => {
-    sfx.init();
-    window.removeEventListener('pointerdown', unlockAudio);
-    window.removeEventListener('keydown', unlockAudio);
-  };
-  window.addEventListener('pointerdown', unlockAudio, { once: true });
-  window.addEventListener('keydown', unlockAudio, { once: true });
-
-  const EPOCH_DATE = new Date('2026-09-07T00:00:00');
-  const now = new Date();
-  const diffDays = Math.floor((now - EPOCH_DATE) / (1000 * 60 * 60 * 24));
-  const TODAY_INDEX = Math.max(0, diffDays);
-
-  function getTodayString() {
-    const d = new Date();
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
-
-  const TODAY_STR = getTodayString();
-
-  const PUZZLE_SETS = [
-    {
-      id: "puzzle-1",
-      number: 1,
-      name: "Puzzle #1",
-      categories: [
-        {
-          title: "ICE SURFACE MARKINGS",
-          level: 0,
-          words: ["BUTTON", "HACK", "HOUSE", "TEE"]
-        },
-        {
-          title: "SHOT TYPES",
-          level: 1,
-          words: ["DRAW", "GUARD", "PEEL", "TAKEOUT"]
-        },
-        {
-          title: "SKIP CALLS",
-          level: 2,
-          words: ["CLEAN", "HARD", "HURRY", "WHOA"]
-        },
-        {
-          title: "THINGS WITH HANDLES",
-          level: 3,
-          words: ["CUP", "DOOR", "STONE", "SUITCASE"]
-        }
-      ]
-    },
-    {
-      id: "puzzle-2",
-      number: 2,
-      name: "Puzzle #2",
-      categories: [
-        {
-          title: "POSITIONS ON A TEAM",
-          level: 0,
-          words: ["LEAD", "SECOND", "SKIP", "VICE"]
-        },
-        {
-          title: "THINGS YOU CAN 'BREAK'",
-          level: 1,
-          words: ["BROOM", "ICE", "RECORD", "TIE"]
-        },
-        {
-          title: "GAME SITUATIONS",
-          level: 2,
-          words: ["BLANK", "END", "HAMMER", "STEAL"]
-        },
-        {
-          title: "DELIVERY & FOOTWEAR GEAR",
-          level: 3,
-          words: ["GRIPPER", "HOG", "SLIDER", "STABILIZER"]
-        }
-      ]
-    },
-    {
-      id: "puzzle-3",
-      number: 3,
-      name: "Puzzle #3",
-      categories: [
-        {
-          title: "LINES ON A CURLING SHEET",
-          level: 0,
-          words: ["BACK", "CENTER", "HOG", "TEE"]
-        },
-        {
-          title: "TYPES OF SHOT WEIGHT",
-          level: 1,
-          words: ["BUMPER", "CONTROL", "HACK", "HEAVY"]
-        },
-        {
-          title: "HOW A STONE MOVES",
-          level: 2,
-          words: ["BITE", "CURL", "FALL", "FINISH"]
-        },
-        {
-          title: "CANADIAN CURLING CHAMPIONS",
-          level: 3,
-          words: ["FERBEY", "GUSHUE", "HOWARD", "JONES"]
-        }
-      ]
-    },
-    {
-      id: "puzzle-4",
-      number: 4,
-      name: "Puzzle #4",
-      categories: [
-        {
-          title: "PARTS OF A CURLING STONE",
-          level: 0,
-          words: ["BAND", "BOLT", "CUP", "HANDLE"]
-        },
-        {
-          title: "ACTIONS WHEN SWEEPING",
-          level: 1,
-          words: ["BRUSH", "BUFF", "CARVE", "POLISH"]
-        },
-        {
-          title: "WORDS BEFORE 'SHEET'",
-          level: 2,
-          words: ["BALANCE", "BED", "CHEAT", "ICE"]
-        },
-        {
-          title: "WINTER OLYMPIC SLIDING SPORTS",
-          level: 3,
-          words: ["BOBSLEIGH", "CURLING", "LUGE", "SKELETON"]
-        }
-      ]
-    },
-    {
-      id: "puzzle-5",
-      number: 5,
-      name: "Puzzle #5",
-      categories: [
-        {
-          title: "DIRECTIONS OF ROTATION",
-          level: 0,
-          words: ["CLOCKWISE", "COUNTER", "IN-TURN", "OUT-TURN"]
-        },
-        {
-          title: "THINGS THAT SLIDE ON ICE",
-          level: 1,
-          words: ["CURLER", "PENGUIN", "PUCK", "SLED"]
-        },
-        {
-          title: "TOURNAMENT FORMATS",
-          level: 2,
-          words: ["KNOCKOUT", "PAGE", "ROUND-ROBIN", "SKINS"]
-        },
-        {
-          title: "CANADIAN ICONS",
-          level: 3,
-          words: ["BEAVER", "LOONIE", "MAPLE", "MOOSE"]
-        }
-      ]
-    },
-    {
-      id: "puzzle-6",
-      number: 6,
-      name: "Puzzle #6",
-      categories: [
-        {
-          title: "SHEET MAINTENANCE TOOLS",
-          level: 0,
-          words: ["MOP", "PEBBLER", "SCRAPER", "SWEEPER"]
-        },
-        {
-          title: "TACTICAL SHOTS",
-          level: 1,
-          words: ["CHIP", "FREEZE", "RAISE", "WICK"]
-        },
-        {
-          title: "WORDS MEANING 'ACCURATE'",
-          level: 2,
-          words: ["DEAD", "EXACT", "ON-LINE", "TRUE"]
-        },
-        {
-          title: "POPULAR CLUBHOUSE DRINKS",
-          level: 3,
-          words: ["ALE", "CIDER", "COFFEE", "LAGER"]
-        }
-      ]
-    },
-    {
-      id: "puzzle-7",
-      number: 7,
-      name: "Puzzle #7",
-      categories: [
-        {
-          title: "PARTS OF A BROOM",
-          level: 0,
-          words: ["HEAD", "PAD", "PIVOT", "SHAFT"]
-        },
-        {
-          title: "THINGS THAT CAN BE SPUN",
-          level: 1,
-          words: ["COIN", "RECORD", "STONE", "YARN"]
-        },
-        {
-          title: "UNITS OF TIME",
-          level: 2,
-          words: ["CLOCK", "HOUR", "SECOND", "TICK"]
-        },
-        {
-          title: "CANADIAN PROVINCES",
-          level: 3,
-          words: ["ALBERTA", "MANITOBA", "ONTARIO", "QUEBEC"]
-        }
-      ]
-    }
-  ];
-
-  const ADDITIONAL_PUZZLES = [
-    [['DELIVERY TERMS', ['BACKSWING', 'RELEASE', 'SLIDE', 'FOLLOW-THROUGH'], 0], ['SHOT WEIGHTS', ['DRAW', 'CONTROL', 'HEAVY', 'TAKEOUT'], 1], ['THINGS WITH A BAND', ['STONE', 'RING', 'MARCH', 'WEDDING'], 2], ['WORDS AFTER ICE', ['MAKER', 'TIME', 'HOUSE', 'BREAK'], 3]],
-    [['ICE-MAKER ACTIONS', ['PEBBLE', 'NIP', 'SCRAPE', 'FLOOD'], 0], ['SHEET CONDITIONS', ['SPEED', 'CURL', 'FROST', 'HUMIDITY'], 1], ['THINGS THAT CAN BE FRESH', ['ICE', 'START', 'POWDER', 'PAINT'], 2], ['CLUBHOUSE ORDERS', ['ALE', 'COFFEE', 'CIDER', 'TEA'], 3]],
-    [['CONTACT SHOTS', ['WICK', 'CAROM', 'CHIP', 'RAISE'], 0], ['WAYS TO PROTECT A STONE', ['GUARD', 'COVER', 'FREEZE', 'BURIED'], 1], ['WORDS BEFORE OFF', ['TAKE', 'SPIN', 'SHOW', 'SIGN'], 2], ['THINGS THAT ROLL', ['STONE', 'DICE', 'BARREL', 'TIDE'], 3]],
-    [['TEAM POSITIONS', ['LEAD', 'SECOND', 'VICE', 'SKIP'], 0], ['THINGS A SKIP CALLS', ['LINE', 'WEIGHT', 'HARD', 'WHOA'], 1], ['KINDS OF SUPPORT', ['BACK', 'SIDE', 'MORAL', 'TECHNICAL'], 2], ['WORDS AFTER TEAM', ['MATE', 'WORK', 'SPORT', 'BUILDING'], 3]],
-    [['SCORING RESULTS', ['BLANK', 'STEAL', 'FORCE', 'DEUCE'], 0], ['TOURNAMENT STAGES', ['ROUND', 'PLAYOFF', 'SEMI', 'FINAL'], 1], ['THINGS WITH A CROWN', ['KING', 'QUEEN', 'TOOTH', 'CHAMPION'], 2], ['WORDS BEFORE ROBIN', ['BATMAN', 'RED', 'PET', 'HOOD'], 3]],
-    [['RULES OFFICIALS MAY CHECK', ['HOG', 'BURN', 'MEASURE', 'LINE'], 0], ['PROTECTED AREAS', ['ZONE', 'HOUSE', 'FORT', 'PARK'], 1], ['WORDS AFTER FREE', ['GUARD', 'THROW', 'FALL', 'STYLE'], 2], ['THINGS THAT CAN BE DEAD', ['HEAT', 'CENTER', 'LINE', 'SERIOUS'], 3]],
-    [['MIXED DOUBLES TERMS', ['POWER', 'PRE-PLACED', 'FIVE', 'EIGHT'], 0], ['CURLING FORMATS', ['JUNIOR', 'WHEELCHAIR', 'SINGLES', 'TEAM'], 1], ['THINGS WITH A HAMMER', ['NAIL', 'THOR', 'MCFLY', 'CLOCK'], 2], ['WORDS AFTER EXTRA', ['END', 'POINT', 'LARGE', 'CREDIT'], 3]],
-    [['HOUSE TARGETS', ['BUTTON', 'FOUR', 'EIGHT', 'TWELVE'], 0], ['GUARD LOCATIONS', ['CENTER', 'CORNER', 'TOP', 'LONG'], 1], ['THINGS THAT CAN BE OPEN', ['HOUSE', 'ICE', 'END', 'SECRET'], 2], ['WORDS BEFORE POINT', ['MATCH', 'TURNING', 'VIEW', 'COUNTER'], 3]],
-    [['CURLING HISTORY', ['SCOTLAND', 'AILSA', 'LOCH', 'BONSPIEL'], 0], ['CANADIAN SYMBOLS', ['MAPLE', 'MOOSE', 'LOONIE', 'BEAVER'], 1], ['WORDS AFTER CLUB', ['HOUSE', 'SANDWICH', 'SODA', 'NIGHT'], 2], ['THINGS THAT CAN BE SPIRITED', ['HORSE', 'AWAY', 'TEAM', 'DRINK'], 3]],
-    [['BROOM PARTS', ['HEAD', 'PAD', 'SHAFT', 'GRIP'], 0], ['FOOTWEAR FEATURES', ['SLIDER', 'GRIPPER', 'SOLE', 'LACE'], 1], ['THINGS THAT CAN BE TAPPED', ['BACK', 'SCREEN', 'KEG', 'BUTTON'], 2], ['WORDS AFTER SHOE', ['BOX', 'HORN', 'STRING', 'LEATHER'], 3]],
-    [['ADVANCED SHOTS', ['DOUBLE', 'TRIPLE', 'PEEL', 'PROMOTE'], 0], ['STONE MOVEMENT', ['ROLL', 'CARRY', 'FINISH', 'FALL'], 1], ['THINGS THAT CAN BE ANGLED', ['RAISE', 'BRUSH', 'MIRROR', 'PARKING'], 2], ['WORDS BEFORE ROLL', ['ROCK', 'CREDIT', 'JELLY', 'DRUM'], 3]],
-    [['ICE SCIENCE', ['FRICTION', 'TEMPERATURE', 'HUMIDITY', 'GRAVITY'], 0], ['THINGS THAT MELT', ['PEBBLE', 'SNOW', 'BUTTER', 'MOMENT'], 1], ['WORDS AFTER RUNNING', ['BAND', 'BACK', 'MATE', 'WATER'], 2], ['THINGS THAT CAN BE POLISHED', ['STONE', 'SHOE', 'IMAGE', 'REPUTATION'], 3]],
-    [['SHOT PLANNING', ['LINE', 'WEIGHT', 'ANGLE', 'TARGET'], 0], ['WAYS TO SCORE', ['DRAW', 'STEAL', 'FORCE', 'TAKE'], 1], ['THINGS THAT CAN BE BLANK', ['END', 'PAGE', 'CHECKET', 'EXPRESSION'], 2], ['WORDS BEFORE BOARD', ['SCORE', 'DIVE', 'IRON', 'SOUND'], 3]],
-    [['CURLING ETIQUETTE', ['HANDSHAKE', 'HONESTY', 'RESPECT', 'CONCEDE'], 0], ['POST-GAME TRADITIONS', ['BROOMSTACKING', 'SOCIAL', 'DRINK', 'RECAP'], 1], ['THINGS THAT CAN BE GOOD', ['CURLING', 'SPORT', 'LINE', 'MORNING'], 2], ['WORDS AFTER SPIRIT', ['OF', 'LEVEL', 'ANIMAL', 'WEEK'], 3]],
-    [['STONE ANATOMY', ['HANDLE', 'BOLT', 'CUP', 'BAND'], 0], ['GRANITE SOURCES', ['AILSA', 'QUARRY', 'ISLAND', 'ROCK'], 1], ['THINGS THAT CAN BE RUNNING', ['LATE', 'WILD', 'COMMENTARY', 'MATE'], 2], ['WORDS BEFORE STONE', ['CURSING', 'MILE', 'ROLLING', 'KEY'], 3]],
-    [['SHOT CALLS', ['HURRY', 'WHOA', 'CLEAN', 'HARD'], 0], ['WAYS TO MOVE A STONE', ['HIT', 'RAISE', 'WICK', 'DRAW'], 1], ['THINGS THAT CAN BE HARD', ['SWEEP', 'ROCK', 'STOP', 'COPY'], 2], ['WORDS AFTER BACK', ['LINE', 'SWING', 'STOP', 'YARD'], 3]],
-    [['SHEET MARKINGS', ['HOG', 'TEE', 'CENTER', 'BACK'], 0], ['SCORING AREAS', ['BUTTON', 'FOUR', 'EIGHT', 'TWELVE'], 1], ['THINGS WITH A LINE', ['CREDIT', 'FINISH', 'PICKUP', 'DEAD'], 2], ['WORDS BEFORE SIDE', ['BOARD', 'WALK', 'KICK', 'INSIDE'], 3]],
-    [['ICE-MAKER TOOLS', ['NIPPER', 'SCRAPER', 'MOP', 'PEBBLER'], 0], ['ICE TEXTURES', ['PEBBLE', 'FROST', 'SHEEN', 'RIPPLE'], 1], ['THINGS THAT CAN BE SMOOTH', ['ICE', 'TALK', 'JAZZ', 'OPERATOR'], 2], ['WORDS AFTER SURFACE', ['AREA', 'TENSION', 'LEVEL', 'MOUNT'], 3]],
-    [['TACTICAL COVER', ['GUARD', 'SCREEN', 'SHIELD', 'BLOCK'], 0], ['OPENING SHOTS', ['DRAW', 'PEEL', 'TICK', 'RAISE'], 1], ['THINGS THAT CAN BE CENTERED', ['STONE', 'TEXT', 'COURT', 'ATTENTION'], 2], ['WORDS BEFORE SHOT', ['FOOT', 'MOON', 'SLAP', 'CALL'], 3]],
-    [['CURLING COMPETITION', ['MATCH', 'END', 'SCORE', 'ROUND'], 0], ['CHAMPIONSHIP PRIZES', ['BROOM', 'CUP', 'MEDAL', 'TROPHY'], 1], ['THINGS WITH A LEAD', ['TEAM', 'PENCIL', 'STORY', 'HORSE'], 2], ['WORDS AFTER PLAY', ['OFF', 'BOOK', 'GROUND', 'CALL'], 3]],
-    [['DELIVERY BALANCE', ['HACK', 'SLIDE', 'STABILIZER', 'GRIPPER'], 0], ['RELEASE DETAILS', ['HANDLE', 'ROTATION', 'LINE', 'TIMING'], 1], ['THINGS THAT CAN BE CLEAN', ['ICE', 'SWEEP', 'SLATE', 'RECORD'], 2], ['WORDS BEFORE POWER', ['PLAY', 'NAP', 'CUP', 'HOUSE'], 3]],
-    [['ADVANCED POSITIONING', ['PORT', 'BITE', 'ANGLE', 'RAISE'], 0], ['STONE FINISHES', ['ROLL', 'FREEZE', 'DRAW', 'PEEL'], 1], ['THINGS THAT CAN BE WICKED', ['SHOT', 'SMART', 'WITCH', 'WEATHER'], 2], ['WORDS AFTER POINT', ['FOUR', 'VIEW', 'BREAK', 'COUNTER'], 3]],
-    [['CURLING ROLES', ['SKIP', 'LEAD', 'SECOND', 'VICE'], 0], ['PEOPLE WHO CALL', ['COACH', 'REFEREE', 'ANNOUNCER', 'JUDGE'], 1], ['THINGS THAT CAN BE VICE', ['PRESIDENT', 'SQUAD', 'VERSA', 'LORD'], 2], ['WORDS BEFORE HOUSE', ['CLUB', 'FULL', 'OPEN', 'POWER'], 3]],
-    [['GAME-DAY CLOCK', ['END', 'TIME', 'SHOT', 'SPLIT'], 0], ['WAYS TO WIN', ['STEAL', 'SCORE', 'FORCE', 'OUTPLAY'], 1], ['THINGS THAT CAN BE EXTRA', ['LARGE', 'CREDIT', 'TERRESTRIAL', 'SPECIAL'], 2], ['WORDS AFTER MATCH', ['POINT', 'PLAY', 'BOOK', 'BOX'], 3]],
-    [['CURLING WORDPLAY', ['BUTTON', 'HAMMER', 'GUARD', 'HOUSE'], 0], ['THINGS THAT CAN BE DRAWN', ['STONE', 'CARD', 'BATH', 'CONCLUSION'], 1], ['WORDS BEFORE ROCK', ['PUNK', 'BED', 'PAPER', 'CURLING'], 2], ['THINGS THAT CAN BE SWEPT', ['ICE', 'FLOOR', 'HAIR', 'EVIDENCE'], 3]],
-    [['MASTER STRATEGY', ['ADAPT', 'READ', 'PLAN', 'EXECUTE'], 0], ['RISK LEVELS', ['SAFE', 'BOLD', 'HIGH', 'CALCULATED'], 1], ['THINGS THAT CAN BE PRECISION', ['SHOT', 'DRIVING', 'SURGERY', 'TOOLS'], 2], ['WORDS AFTER CURLING', ['STONE', 'IRON', 'CLUB', 'BROOM'], 3]]
-  ].map((groups, index) => ({
-    id: `puzzle-${index + 8}`,
-    number: index + 8,
-    name: `Puzzle #${index + 8}`,
-    categories: groups.map(([title, words, level]) => ({ title, words, level }))
-  }));
-
-  PUZZLE_SETS.push(...ADDITIONAL_PUZZLES);
-
-  const STORAGE_KEY = "button_curl_state_v3";
-
-  function getDefaultState() {
-    return {
-      solvedPuzzles: {},
-      inProgress: {},
-      stats: {
-        played: 0,
-        wins: 0,
-        currentStreak: 0,
-        maxStreak: 0,
-        lastDailyDate: null,
-        distribution: { 4: 0, 3: 0, 2: 0, 1: 0 }
-      },
-      settings: {
-        soundEnabled: true
+      } catch (err) {
+        // Safe silence on autoplay policy restriction
       }
-    };
-  }
-
-  function loadGameState() {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return getDefaultState();
-      const parsed = JSON.parse(raw);
-      return {
-        solvedPuzzles: parsed.solvedPuzzles || {},
-        inProgress: parsed.inProgress || {},
-        stats: Object.assign(getDefaultState().stats, parsed.stats || {}),
-        settings: Object.assign(getDefaultState().settings, parsed.settings || {})
-      };
-    } catch (e) {
-      return getDefaultState();
     }
   }
 
-  function saveGameState(state) {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (e) {}
-  }
+  /* ==========================================================================
+     3. 2D BACKGROUND CURLING STONE PHYSICS WITH SPRITE CACHING
+     ========================================================================== */
+  class BackgroundPhysics {
+    constructor(canvasId) {
+      this.canvas = document.getElementById(canvasId);
+      this.ctx = this.canvas.getContext("2d");
+      this.stones = [];
+      this.animId = null;
+      this.activeGame = false;
+      this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-  let AppState = loadGameState();
-  sfx.enabled = AppState.settings.soundEnabled;
+      // Fixed timestep accumulator
+      this.lastTime = performance.now();
+      this.fixedStep = 1 / 60;
+      this.accumulator = 0;
 
-  let activePuzzle = null;
-  let activeSelectedWords = [];
-  let remainingTiles = [];
-  let mistakesRemaining = 4;
-  let solvedCategories = [];
-  let guessedWordCombos = [];
-  let guessHistory = [];
+      // High-speed entry event timer
+      this.nextAggressiveTime = performance.now() + 25000 + Math.random() * 15000;
 
-  const screens = {
-    menu: document.getElementById('view-menu'),
-    game: document.getElementById('view-game'),
-    vault: document.getElementById('view-vault'),
-    instructions: document.getElementById('view-instructions')
-  };
+      // Offscreen Cached Sprites for Granite Rocks
+      this.sprites = { red: null, yellow: null };
+      this.spriteBaseRadius = 40;
+      this.buildStoneSprites();
 
-  const btnHome = document.getElementById('btn-home');
-  const btnSound = document.getElementById('btn-sound-toggle');
-  const soundIcon = document.getElementById('sound-icon');
-  const btnStatsToggle = document.getElementById('btn-stats-toggle');
-  const currentBadge = document.getElementById('current-screen-badge');
-
-  const btnMenuDaily = document.getElementById('menu-btn-daily');
-  const dailyDrawMeta = document.getElementById('daily-draw-meta');
-  const dailyStatusPill = document.getElementById('daily-status-pill');
-  const btnMenuVault = document.getElementById('menu-btn-vault');
-  const vaultCountBadge = document.getElementById('vault-count-badge');
-  const btnMenuInstructions = document.getElementById('menu-btn-instructions');
-  const btnCloseInstructions = document.getElementById('btn-close-instructions');
-
-  const puzzleGrid = document.getElementById('puzzle-grid');
-  const completedRack = document.getElementById('completed-categories');
-  const mistakesRack = document.getElementById('mistakes-counter');
-  const puzzleLabel = document.getElementById('puzzle-label');
-  const statusIndicator = document.getElementById('status-indicator');
-
-  const btnShuffle = document.getElementById('btn-shuffle');
-  const btnDeselect = document.getElementById('btn-deselect');
-  const btnSubmit = document.getElementById('btn-submit');
-  const toastBanner = document.getElementById('toast-banner');
-
-  const vaultList = document.getElementById('vault-list');
-
-  const statsModal = document.getElementById('stats-modal');
-  const btnCloseStats = document.getElementById('btn-close-stats');
-  const btnStatsReturn = document.getElementById('btn-stats-return');
-  const statPlayed = document.getElementById('stat-played');
-  const statWinRate = document.getElementById('stat-win-rate');
-  const statCurrentStreak = document.getElementById('stat-current-streak');
-  const statMaxStreak = document.getElementById('stat-max-streak');
-  const distBarsRack = document.getElementById('dist-bars-rack');
-
-  const gameModal = document.getElementById('game-modal');
-  const modalBanner = document.getElementById('modal-banner');
-  const modalTitle = document.getElementById('modal-title');
-  const modalSub = document.getElementById('modal-sub');
-  const shareGridPreview = document.getElementById('share-grid-preview');
-  const btnShareResult = document.getElementById('btn-share-result');
-  const btnModalStats = document.getElementById('btn-modal-stats');
-  const btnModalExit = document.getElementById('btn-modal-exit');
-
-  function switchScreen(screenName, badgeText) {
-    Object.keys(screens).forEach(key => {
-      screens[key].classList.toggle('active', key === screenName);
-    });
-    currentBadge.textContent = badgeText;
-    
-    if (screenName === 'menu') {
-      btnHome.classList.add('hidden');
-    } else {
-      btnHome.classList.remove('hidden');
+      this.init();
     }
-  }
 
-  function updateSoundUI() {
-    soundIcon.innerHTML = sfx.enabled
-      ? `<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-        </svg>`
-      : `<svg viewBox="0 0 24 24" width="20" height="20" stroke="currentColor" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round">
-          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-          <line x1="23" y1="9" x2="17" y2="15"></line>
-          <line x1="17" y1="9" x2="23" y2="15"></line>
-        </svg>`;
-  }
+    buildStoneSprites() {
+      ["red", "yellow"].forEach(team => {
+        const r = this.spriteBaseRadius;
+        const size = (r + 10) * 2;
+        const c = document.createElement("canvas");
+        c.width = size;
+        c.height = size;
+        const ctx = c.getContext("2d");
+        const cx = size / 2;
+        const cy = size / 2;
 
-  function getDailyPuzzle() {
-    const idx = TODAY_INDEX % PUZZLE_SETS.length;
-    return PUZZLE_SETS[idx] || PUZZLE_SETS[0];
-  }
+        // 1. Soft Ice Contact Ground Shadow
+        ctx.beginPath();
+        ctx.ellipse(cx, cy + 3, r * 0.98, r * 0.90, 0, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(16, 47, 74, 0.18)";
+        ctx.filter = "blur(3px)";
+        ctx.fill();
+        ctx.filter = "none";
 
-  function updateMenuMeta() {
-    const daily = getDailyPuzzle();
-    if (daily) {
-      dailyDrawMeta.textContent = `${daily.name} • Daily Challenge`;
-      const isDone = !!AppState.solvedPuzzles[daily.id];
-      const inProgress = AppState.inProgress[daily.id];
+        // 2. Base Granite Body (Ailsa Craig Blue-Grey)
+        const graniteGrad = ctx.createRadialGradient(cx - r * 0.25, cy - r * 0.25, r * 0.1, cx, cy, r);
+        graniteGrad.addColorStop(0, "#7a8a99");
+        graniteGrad.addColorStop(0.5, "#4e5d6c");
+        graniteGrad.addColorStop(0.85, "#334150");
+        graniteGrad.addColorStop(1, "#1e293b");
 
-      if (isDone) {
-        dailyStatusPill.textContent = "COMPLETED";
-        dailyStatusPill.style.background = "#86efac";
-        dailyStatusPill.style.color = "#0c1824";
-      } else if (inProgress && inProgress.remainingTiles && inProgress.remainingTiles.length < 16) {
-        dailyStatusPill.textContent = "IN PROGRESS";
-        dailyStatusPill.style.background = "#bae6fd";
-        dailyStatusPill.style.color = "#0c1824";
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.fillStyle = graniteGrad;
+        ctx.fill();
+
+        // 3. Granite Micro-speckling (Procedural Quartz & Hornblende flecks)
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(cx, cy, r - 1, 0, Math.PI * 2);
+        ctx.clip();
+        for (let i = 0; i < 90; i++) {
+          const angle = (i * 137.5) * (Math.PI / 180);
+          const dist = Math.sqrt(i / 90) * (r - 2);
+          const px = cx + Math.cos(angle) * dist;
+          const py = cy + Math.sin(angle) * dist;
+          ctx.fillStyle = i % 2 === 0 ? "rgba(255, 255, 255, 0.15)" : "rgba(15, 23, 42, 0.35)";
+          ctx.fillRect(px, py, 1.2, 1.2);
+        }
+        ctx.restore();
+
+        // 4. Striking Band & Outer Bevel
+        ctx.beginPath();
+        ctx.arc(cx, cy, r, 0, Math.PI * 2);
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = "rgba(16, 47, 74, 0.4)";
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, r * 0.88, 0, Math.PI * 2);
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.35)";
+        ctx.stroke();
+
+        // Inner Top Plane Bevel
+        ctx.beginPath();
+        ctx.arc(cx, cy, r * 0.68, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(51, 65, 80, 0.75)";
+        ctx.fill();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.2)";
+        ctx.stroke();
+
+        // 5. Gooseneck Handle with Fastener Studs
+        // Handle Shadow on granite
+        ctx.beginPath();
+        ctx.roundRect(cx - r * 0.38, cy - r * 0.12 + 2, r * 0.76, r * 0.28, 5);
+        ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
+        ctx.fill();
+
+        // Handle Studs
+        ctx.beginPath();
+        ctx.arc(cx - r * 0.28, cy, 3, 0, Math.PI * 2);
+        ctx.arc(cx + r * 0.28, cy, 3, 0, Math.PI * 2);
+        ctx.fillStyle = "#94a3b8";
+        ctx.fill();
+
+        // Handle Main Body
+        ctx.beginPath();
+        ctx.roundRect(cx - r * 0.36, cy - r * 0.13, r * 0.72, r * 0.26, 4);
+        if (team === "red") {
+          const hGrad = ctx.createLinearGradient(cx, cy - r * 0.13, cx, cy + r * 0.13);
+          hGrad.addColorStop(0, "#ee6865");
+          hGrad.addColorStop(0.5, "#d63b3b");
+          hGrad.addColorStop(1, "#b92e34");
+          ctx.fillStyle = hGrad;
+        } else {
+          const hGrad = ctx.createLinearGradient(cx, cy - r * 0.13, cx, cy + r * 0.13);
+          hGrad.addColorStop(0, "#ffe698");
+          hGrad.addColorStop(0.5, "#f0c647");
+          hGrad.addColorStop(1, "#d8aa32");
+          ctx.fillStyle = hGrad;
+        }
+        ctx.fill();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.8)";
+        ctx.stroke();
+
+        this.sprites[team] = c;
+      });
+    }
+
+    init() {
+      this.resize();
+      window.addEventListener("resize", () => this.resize(), { passive: true });
+      this.spawnStones();
+      if (!this.reducedMotion) {
+        this.loop();
       } else {
-        dailyStatusPill.textContent = "PLAY";
-        dailyStatusPill.style.background = "";
-        dailyStatusPill.style.color = "";
+        this.drawStaticFrame();
       }
     }
 
-    vaultCountBadge.textContent = `${Math.max(0, daily.number - 1)} PUZZLES`;
-  }
+    resize() {
+      this.width = this.canvas.width = window.innerWidth;
+      this.height = this.canvas.height = window.innerHeight;
+    }
 
-  function renderVaultList() {
-    vaultList.innerHTML = '';
-    const daily = getDailyPuzzle();
+    spawnStones() {
+      this.stones = [];
+      const count = this.activeGame ? 3 : Math.min(6, Math.max(4, Math.floor(this.width / 180)));
+      const teams = ["red", "yellow"];
 
-    PUZZLE_SETS.filter(p => p.number < daily.number).forEach(p => {
-      const record = AppState.solvedPuzzles[p.id];
-      const inProgress = AppState.inProgress[p.id];
-      const isToday = p.id === daily.id;
-      const card = document.createElement('div');
-      card.className = 'vault-card';
-      card.setAttribute('role', 'listitem');
-      card.tabIndex = 0;
+      for (let i = 0; i < count; i++) {
+        const radius = Math.min(30, Math.max(20, this.width * 0.032));
+        let x = Math.random() * (this.width - radius * 4) + radius * 2;
+        let y = Math.random() * (this.height - radius * 4) + radius * 2;
 
-      let statusClass = 'status-unplayed';
-      let statusText = 'UNPLAYED';
+        // Ensure clean non-overlapping initial placement
+        for (let j = 0; j < this.stones.length; j++) {
+          const dx = x - this.stones[j].x;
+          const dy = y - this.stones[j].y;
+          if (Math.hypot(dx, dy) < radius + this.stones[j].radius + 8) {
+            x = Math.random() * (this.width - radius * 4) + radius * 2;
+            y = Math.random() * (this.height - radius * 4) + radius * 2;
+            j = -1;
+          }
+        }
 
-      if (record) {
-        statusClass = record.won ? 'status-won' : 'status-loss';
-        statusText = record.won ? `SOLVED (${record.mistakesRemaining} LEFT)` : 'MISSED';
-      } else if (inProgress && inProgress.remainingTiles && inProgress.remainingTiles.length < 16) {
-        statusClass = 'status-progress';
-        statusText = 'IN PROGRESS';
-      } else if (isToday) {
-        statusClass = 'status-today';
-        statusText = "TODAY";
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 0.2 + Math.random() * 0.35; // Gentle curling ice glide
+
+        this.stones.push({
+          x,
+          y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+          radius,
+          mass: radius * radius,
+          team: teams[i % 2],
+          rotation: Math.random() * Math.PI * 2,
+          vRot: (Math.random() - 0.5) * 0.004,
+          isAggressive: false
+        });
+      }
+    }
+
+    setActiveGameMode(isActive) {
+      this.activeGame = isActive;
+      this.spawnStones();
+    }
+
+    spawnAggressiveRock() {
+      if (this.activeGame || this.stones.length >= 8) return;
+      const radius = Math.min(30, Math.max(20, this.width * 0.032));
+      const fromLeft = Math.random() > 0.5;
+      const x = fromLeft ? -radius : this.width + radius;
+      const y = Math.random() * (this.height * 0.6) + this.height * 0.2;
+      const targetX = this.width * (0.3 + Math.random() * 0.4);
+      const targetY = this.height * (0.3 + Math.random() * 0.4);
+      const angle = Math.atan2(targetY - y, targetX - x);
+      const speed = 2.4 + Math.random() * 1.2;
+
+      this.stones.push({
+        x,
+        y,
+        vx: Math.cos(angle) * speed,
+        vy: Math.sin(angle) * speed,
+        radius,
+        mass: radius * radius * 1.2,
+        team: Math.random() > 0.5 ? "red" : "yellow",
+        rotation: Math.random() * Math.PI * 2,
+        vRot: (Math.random() - 0.5) * 0.02,
+        isAggressive: true
+      });
+    }
+
+    stepSimulation() {
+      // 1. Position update & wall boundaries with restitution
+      for (let i = 0; i < this.stones.length; i++) {
+        const s = this.stones[i];
+        s.x += s.vx;
+        s.y += s.vy;
+        s.rotation += s.vRot;
+
+        // Ice Friction Damping
+        s.vx *= 0.9988;
+        s.vy *= 0.9988;
+        s.vRot *= 0.996;
+
+        // Maintain calm baseline motion
+        const curSpeed = Math.hypot(s.vx, s.vy);
+        if (curSpeed < 0.12 && !s.isAggressive) {
+          const a = Math.random() * Math.PI * 2;
+          s.vx = Math.cos(a) * 0.22;
+          s.vy = Math.sin(a) * 0.22;
+        }
+
+        // Boundary bounce with slight damping
+        if (s.x - s.radius < 0) {
+          s.x = s.radius;
+          s.vx = Math.abs(s.vx) * 0.85;
+        } else if (s.x + s.radius > this.width) {
+          s.x = this.width - s.radius;
+          s.vx = -Math.abs(s.vx) * 0.85;
+        }
+
+        if (s.y - s.radius < 0) {
+          s.y = s.radius;
+          s.vy = Math.abs(s.vy) * 0.85;
+        } else if (s.y + s.radius > this.height) {
+          s.y = this.height - s.radius;
+          s.vy = -Math.abs(s.vy) * 0.85;
+        }
       }
 
-      card.innerHTML = `
-        <div class="vault-card-info">
-          <h3>${p.name}</h3>
-          <span>4 Categories • 16 Words</span>
-        </div>
-        <div class="vault-card-status ${statusClass}">
-          ${statusText}
-        </div>
-      `;
+      // 2. Pairwise Circle-Circle Collision Detection & Resolution
+      for (let i = 0; i < this.stones.length; i++) {
+        for (let j = i + 1; j < this.stones.length; j++) {
+          const s1 = this.stones[i];
+          const s2 = this.stones[j];
 
-      const startAction = () => {
-        sfx.playTap();
-        startPuzzle(p);
+          const dx = s2.x - s1.x;
+          const dy = s2.y - s1.y;
+          const dist = Math.hypot(dx, dy);
+          const minDist = s1.radius + s2.radius;
+
+          if (dist < minDist && dist > 0) {
+            const nx = dx / dist;
+            const ny = dy / dist;
+
+            // Anti-sticking positional correction
+            const overlap = (minDist - dist) * 0.5;
+            s1.x -= nx * overlap;
+            s1.y -= ny * overlap;
+            s2.x += nx * overlap;
+            s2.y += ny * overlap;
+
+            // Relative velocities along collision normal
+            const kx = s1.vx - s2.vx;
+            const ky = s1.vy - s2.vy;
+            const p = 2 * (nx * kx + ny * ky) / (s1.mass + s2.mass);
+
+            // Curling Stone Restitution
+            const restitution = 0.82;
+
+            s1.vx -= p * s2.mass * nx * restitution;
+            s1.vy -= p * s2.mass * ny * restitution;
+            s2.vx += p * s1.mass * nx * restitution;
+            s2.vy += p * s1.mass * ny * restitution;
+
+            // Rotation transfer
+            s1.vRot += (Math.random() - 0.5) * 0.006;
+            s2.vRot += (Math.random() - 0.5) * 0.006;
+
+            if (s1.isAggressive || s2.isAggressive) {
+              s1.isAggressive = false;
+              s2.isAggressive = false;
+            }
+          }
+        }
+      }
+    }
+
+    render() {
+      this.ctx.clearRect(0, 0, this.width, this.height);
+
+      // Render Soft Curling House Rink Rings
+      const cx = this.width * 0.5;
+      const cy = this.height * 0.32;
+      const ringScale = Math.min(this.width, this.height) * 0.36;
+
+      this.ctx.save();
+      this.ctx.globalAlpha = 0.08;
+
+      // 12-Foot Outer Blue Ring
+      this.ctx.beginPath();
+      this.ctx.arc(cx, cy, ringScale, 0, Math.PI * 2);
+      this.ctx.fillStyle = "#1d4ed8";
+      this.ctx.fill();
+
+      // 8-Foot White Ring
+      this.ctx.beginPath();
+      this.ctx.arc(cx, cy, ringScale * 0.66, 0, Math.PI * 2);
+      this.ctx.fillStyle = "#ffffff";
+      this.ctx.fill();
+
+      // 4-Foot Red Ring
+      this.ctx.beginPath();
+      this.ctx.arc(cx, cy, ringScale * 0.33, 0, Math.PI * 2);
+      this.ctx.fillStyle = "#d63b3b";
+      this.ctx.fill();
+
+      // Center Button
+      this.ctx.beginPath();
+      this.ctx.arc(cx, cy, ringScale * 0.1, 0, Math.PI * 2);
+      this.ctx.fillStyle = "#ffffff";
+      this.ctx.fill();
+
+      // Rink Crosshairs (Tee Line & Centre Line)
+      this.ctx.strokeStyle = "rgba(16, 47, 74, 0.4)";
+      this.ctx.lineWidth = 1;
+      this.ctx.beginPath();
+      this.ctx.moveTo(cx, cy - ringScale * 1.2);
+      this.ctx.lineTo(cx, cy + ringScale * 1.2);
+      this.ctx.moveTo(cx - ringScale * 1.2, cy);
+      this.ctx.lineTo(cx + ringScale * 1.2, cy);
+      this.ctx.stroke();
+
+      this.ctx.restore();
+
+      // Render Cached Curling Stones
+      for (let i = 0; i < this.stones.length; i++) {
+        const s = this.stones[i];
+        const sprite = this.sprites[s.team];
+        if (!sprite) continue;
+
+        const renderRadius = s.radius + 10;
+        this.ctx.save();
+        this.ctx.translate(s.x, s.y);
+        this.ctx.rotate(s.rotation);
+        this.ctx.drawImage(
+          sprite,
+          -renderRadius,
+          -renderRadius,
+          renderRadius * 2,
+          renderRadius * 2
+        );
+        this.ctx.restore();
+      }
+    }
+
+    loop() {
+      const now = performance.now();
+      const elapsed = Math.min((now - this.lastTime) / 1000, 0.1);
+      this.lastTime = now;
+      this.accumulator += elapsed;
+
+      // High-speed delivery event check
+      if (now > this.nextAggressiveTime) {
+        this.spawnAggressiveRock();
+        this.nextAggressiveTime = now + 30000 + Math.random() * 20000;
+      }
+
+      // Fixed Timestep Simulation Loop
+      while (this.accumulator >= this.fixedStep) {
+        this.stepSimulation();
+        this.accumulator -= this.fixedStep;
+      }
+
+      this.render();
+      this.animId = requestAnimationFrame(() => this.loop());
+    }
+
+    drawStaticFrame() {
+      this.render();
+    }
+  }
+
+  /* ==========================================================================
+     4. DETERMINISTIC DAILY SCHEDULER & CONTINUITY
+     ========================================================================== */
+  class DailyScheduler {
+    static getTodayIndex() {
+      const now = new Date();
+      const userMidnightUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
+      const diffDays = Math.floor((userMidnightUTC - ANCHOR_DATE_UTC) / (1000 * 60 * 60 * 24));
+      // Prior to Sept 8, 2026, defaults to Day 0 for seamless verification and testing
+      return Math.max(0, diffDays);
+    }
+
+    static getPuzzleForIndex(index) {
+      const puzzles = window.CURLING_CONNECTIONS_PUZZLES || [];
+      if (!puzzles.length) return null;
+      // Deterministic stable sequence assignment with safe wraparound
+      const sequenceIndex = index % puzzles.length;
+      return puzzles[sequenceIndex];
+    }
+
+    static getReleasedPuzzles(currentDayIndex) {
+      const puzzles = window.CURLING_CONNECTIONS_PUZZLES || [];
+      // Vault displays strictly PAST released archives (sequence < currentDayIndex)
+      // Day 0: Vault is empty. Day 1: Vault contains Day 0.
+      return puzzles.filter(p => p.sequence < currentDayIndex);
+    }
+
+    static formatPuzzleDate(releaseDateStr, sequence) {
+      if (!releaseDateStr) return `Day ${sequence}`;
+      const [y, m, d] = releaseDateStr.split("-").map(Number);
+      const dateObj = new Date(Date.UTC(y, m - 1, d));
+      return dateObj.toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+        timeZone: "UTC"
+      });
+    }
+  }
+
+  /* ==========================================================================
+     5. VERSIONED STORAGE CONTROLLER
+     ========================================================================== */
+  class StorageManager {
+    static load() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return StorageManager.getDefault();
+        const parsed = JSON.parse(raw);
+        if (parsed && parsed.version === STORAGE_VERSION) {
+          return parsed;
+        }
+        return StorageManager.getDefault();
+      } catch (err) {
+        return StorageManager.getDefault();
+      }
+    }
+
+    static save(data) {
+      try {
+        data.version = STORAGE_VERSION;
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      } catch (err) {
+        // Gracefully handle storage quota or private browsing limits
+      }
+    }
+
+    static getDefault() {
+      return {
+        version: STORAGE_VERSION,
+        soundEnabled: true,
+        stats: {
+          played: 0,
+          won: 0,
+          currentStreak: 0,
+          maxStreak: 0
+        },
+        puzzleProgress: {} // [puzzleId]: { solvedGroupIndices: [], mistakesRemaining: 4, completed: false, won: false, guessHistory: [] }
       };
+    }
+  }
 
-      card.addEventListener('click', startAction);
-      card.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          startAction();
+  /* ==========================================================================
+     6. MAIN CONNECTIONS APPLICATION ENGINE
+     ========================================================================== */
+  class CurlingConnectionsApp {
+    constructor() {
+      this.sound = new SoundController();
+      this.physics = new BackgroundPhysics("curling-bg-canvas");
+      this.state = StorageManager.load();
+      this.sound.enabled = this.state.soundEnabled ?? true;
+
+      this.currentDayIndex = DailyScheduler.getTodayIndex();
+      this.activePuzzle = null;
+      this.selectedWords = [];
+      this.solvedCategoryIndices = [];
+      this.remainingWords = [];
+      this.mistakesRemaining = MAX_MISTAKES;
+      this.isGameOver = false;
+      this.guessHistory = [];
+
+      this.initDom();
+      this.bindEvents();
+      this.renderMenu();
+    }
+
+    initDom() {
+      // Screens
+      this.screenMenu = document.getElementById("screen-menu");
+      this.screenGame = document.getElementById("screen-game");
+      this.screenVault = document.getElementById("screen-vault");
+
+      // Menu Elements
+      this.btnPlayToday = document.getElementById("btn-play-today");
+      this.btnPlayTodayText = document.getElementById("btn-play-today-text");
+      this.todayDayLabel = document.getElementById("today-day-label");
+      this.todayStatusText = document.getElementById("today-status-text");
+      this.todayPuzzleTitle = document.getElementById("today-puzzle-title");
+      this.vaultCountLabel = document.getElementById("vault-count-label");
+
+      this.btnOpenVault = document.getElementById("btn-open-vault");
+      this.btnToggleSound = document.getElementById("btn-toggle-sound");
+      this.soundStateText = document.getElementById("sound-state-text");
+      this.soundIconOn = this.btnToggleSound.querySelector(".sound-icon-on");
+      this.soundIconOff = this.btnToggleSound.querySelector(".sound-icon-off");
+
+      this.btnOpenHelp = document.getElementById("btn-open-help");
+      this.btnOpenStats = document.getElementById("btn-open-stats");
+
+      // Game Screen Elements
+      this.btnGameBack = document.getElementById("btn-game-back");
+      this.btnGameHelp = document.getElementById("btn-game-help");
+      this.gameDateBadge = document.getElementById("game-date-badge");
+      this.gameTitleText = document.getElementById("game-title-text");
+      this.toastMessage = document.getElementById("toast-message");
+      this.solvedContainer = document.getElementById("solved-groups-container");
+      this.gridContainer = document.getElementById("connections-grid");
+      this.mistakeStonesWrap = document.getElementById("mistake-stones-wrap");
+
+      this.btnShuffle = document.getElementById("btn-shuffle");
+      this.btnDeselectAll = document.getElementById("btn-deselect-all");
+      this.btnSubmit = document.getElementById("btn-submit");
+
+      // Vault Screen Elements
+      this.btnVaultBack = document.getElementById("btn-vault-back");
+      this.vaultList = document.getElementById("vault-list");
+
+      // Modals
+      this.modalHelp = document.getElementById("modal-help");
+      this.btnCloseHelp = document.getElementById("btn-close-help");
+      this.btnDismissHelp = document.getElementById("btn-dismiss-help");
+
+      this.modalStats = document.getElementById("modal-stats");
+      this.btnCloseStats = document.getElementById("btn-close-stats");
+      this.btnDismissStats = document.getElementById("btn-dismiss-stats");
+      this.statPlayed = document.getElementById("stat-played");
+      this.statWinRate = document.getElementById("stat-win-rate");
+      this.statCurrentStreak = document.getElementById("stat-current-streak");
+      this.statMaxStreak = document.getElementById("stat-max-streak");
+
+      this.modalResult = document.getElementById("modal-result");
+      this.btnCloseResult = document.getElementById("btn-close-result");
+      this.btnResultMenu = document.getElementById("btn-result-menu");
+      this.btnShareResult = document.getElementById("btn-share-result");
+      this.resultOutcomeMsg = document.getElementById("result-outcome-msg");
+      this.resultEmojiGrid = document.getElementById("result-emoji-grid");
+      this.resultMistakesUsed = document.getElementById("result-mistakes-used");
+
+      this.updateSoundUi();
+    }
+
+    bindEvents() {
+      // Menu Actions
+      this.btnPlayToday.addEventListener("click", () => {
+        const todayPuzzle = DailyScheduler.getPuzzleForIndex(this.currentDayIndex);
+        this.loadPuzzle(todayPuzzle, true);
+      });
+
+      this.btnOpenVault.addEventListener("click", () => this.showScreen("vault"));
+      this.btnVaultBack.addEventListener("click", () => this.showScreen("menu"));
+
+      // Game Actions
+      this.btnGameBack.addEventListener("click", () => {
+        this.saveCurrentPuzzleState();
+        this.renderMenu();
+        this.showScreen("menu");
+      });
+
+      this.btnGameHelp.addEventListener("click", () => this.openModal(this.modalHelp));
+      this.btnOpenHelp.addEventListener("click", () => this.openModal(this.modalHelp));
+      this.btnCloseHelp.addEventListener("click", () => this.closeModal(this.modalHelp));
+      this.btnDismissHelp.addEventListener("click", () => this.closeModal(this.modalHelp));
+
+      this.btnOpenStats.addEventListener("click", () => this.openStatsModal());
+      this.btnCloseStats.addEventListener("click", () => this.closeModal(this.modalStats));
+      this.btnDismissStats.addEventListener("click", () => this.closeModal(this.modalStats));
+
+      this.btnToggleSound.addEventListener("click", () => {
+        const enabled = this.sound.toggle();
+        this.state.soundEnabled = enabled;
+        StorageManager.save(this.state);
+        this.updateSoundUi();
+        if (enabled) this.sound.play("tap");
+      });
+
+      this.btnShuffle.addEventListener("click", () => this.shuffleRemaining());
+      this.btnDeselectAll.addEventListener("click", () => this.deselectAll());
+      this.btnSubmit.addEventListener("click", () => this.submitGuess());
+
+      // Result Modal Actions
+      this.btnCloseResult.addEventListener("click", () => this.closeModal(this.modalResult));
+      this.btnResultMenu.addEventListener("click", () => {
+        this.closeModal(this.modalResult);
+        this.renderMenu();
+        this.showScreen("menu");
+      });
+      this.btnShareResult.addEventListener("click", () => this.shareResult());
+
+      // Modal Background Dismissal & Keyboard ESC
+      [this.modalHelp, this.modalStats, this.modalResult].forEach(modal => {
+        modal.addEventListener("click", (e) => {
+          if (e.target === modal) this.closeModal(modal);
+        });
+      });
+
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          [this.modalHelp, this.modalStats, this.modalResult].forEach(m => this.closeModal(m));
         }
       });
 
-      vaultList.appendChild(card);
-    });
-  }
-
-  function startPuzzle(puzzle) {
-    activePuzzle = puzzle;
-    activeSelectedWords = [];
-    guessHistory = [];
-    guessedWordCombos = [];
-    completedRack.innerHTML = '';
-    puzzleGrid.innerHTML = '';
-    mistakesRemaining = 4;
-    updateMistakesUI();
-
-    puzzleLabel.textContent = puzzle.name.toUpperCase();
-    statusIndicator.textContent = "SELECT 4 WORDS";
-    btnSubmit.disabled = true;
-
-    if (AppState.solvedPuzzles[puzzle.id]) {
-      const record = AppState.solvedPuzzles[puzzle.id];
-      puzzle.categories.forEach(cat => renderSolvedCategoryBanner(cat));
-      remainingTiles = [];
-      renderGrid();
-      showToast("Puzzle completed");
-      setTimeout(() => openGameOverModal(record.won), 300);
-      switchScreen('game', 'COMPLETED');
-      return;
-    }
-
-    const savedProgress = AppState.inProgress[puzzle.id];
-    if (savedProgress && savedProgress.remainingTiles && savedProgress.remainingTiles.length > 0) {
-      remainingTiles = savedProgress.remainingTiles;
-      activeSelectedWords = savedProgress.selectedWords || [];
-      mistakesRemaining = savedProgress.mistakesRemaining ?? 4;
-      solvedCategories = savedProgress.solvedCategories || [];
-      guessedWordCombos = savedProgress.guessedWordCombos || [];
-      guessHistory = savedProgress.guessHistory || [];
-
-      solvedCategories.forEach(cat => renderSolvedCategoryBanner(cat));
-      updateMistakesUI();
-      renderGrid();
-      switchScreen('game', puzzle.id === getDailyPuzzle().id ? 'DAILY PUZZLE' : 'ARCHIVE');
-      return;
-    }
-
-    const allWords = [];
-    puzzle.categories.forEach(cat => {
-      cat.words.forEach(w => {
-        allWords.push({
-          word: w.trim().toUpperCase(),
-          categoryLevel: cat.level,
-          categoryTitle: cat.title
-        });
+      // Midnight Rollover Monitoring
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) {
+          const freshDay = DailyScheduler.getTodayIndex();
+          if (freshDay !== this.currentDayIndex) {
+            this.currentDayIndex = freshDay;
+            this.renderMenu();
+          }
+        }
       });
-    });
-
-    remainingTiles = shuffleArray(allWords);
-    solvedCategories = [];
-
-    saveInProgressState();
-    renderGrid();
-    switchScreen('game', puzzle.id === getDailyPuzzle().id ? 'DAILY PUZZLE' : 'ARCHIVE');
-  }
-
-  function saveInProgressState() {
-    if (!activePuzzle || AppState.solvedPuzzles[activePuzzle.id]) return;
-    AppState.inProgress[activePuzzle.id] = {
-      selectedWords: activeSelectedWords,
-      remainingTiles: remainingTiles,
-      mistakesRemaining: mistakesRemaining,
-      solvedCategories: solvedCategories,
-      guessedWordCombos: guessedWordCombos,
-      guessHistory: guessHistory
-    };
-    saveGameState(AppState);
-  }
-
-  function clearInProgressState(puzzleId) {
-    if (AppState.inProgress[puzzleId]) {
-      delete AppState.inProgress[puzzleId];
-      saveGameState(AppState);
     }
-  }
 
-  function renderGrid() {
-    puzzleGrid.innerHTML = '';
-    remainingTiles.forEach(item => {
-      const tile = document.createElement('button');
-      tile.type = 'button';
-      tile.className = 'word-tile';
-      tile.setAttribute('role', 'button');
-      tile.setAttribute('aria-label', item.word);
-      tile.textContent = item.word;
-      tile.dataset.word = item.word;
-
-      const isSelected = activeSelectedWords.includes(item.word);
-      tile.classList.toggle('selected', isSelected);
-      tile.setAttribute('aria-pressed', isSelected ? 'true' : 'false');
-
-      tile.addEventListener('click', () => handleTileClick(item.word, tile));
-      puzzleGrid.appendChild(tile);
-    });
-
-    btnSubmit.disabled = activeSelectedWords.length !== 4;
-    updateStatusText();
-  }
-
-  function updateStatusText() {
-    if (activeSelectedWords.length === 0) {
-      statusIndicator.textContent = "SELECT 4 WORDS";
-    } else if (activeSelectedWords.length === 4) {
-      statusIndicator.textContent = "READY TO CHECK";
-    } else {
-      statusIndicator.textContent = `${activeSelectedWords.length}/4 SELECTED`;
+    updateSoundUi() {
+      if (this.sound.enabled) {
+        this.soundStateText.textContent = "Sound: ON";
+        this.soundIconOn.classList.remove("sound-icon-hidden");
+        this.soundIconOff.classList.add("sound-icon-hidden");
+        this.btnToggleSound.setAttribute("aria-pressed", "true");
+      } else {
+        this.soundStateText.textContent = "Sound: OFF";
+        this.soundIconOn.classList.add("sound-icon-hidden");
+        this.soundIconOff.classList.remove("sound-icon-hidden");
+        this.btnToggleSound.setAttribute("aria-pressed", "false");
+      }
     }
-  }
 
-  function handleTileClick(word, tileEl) {
-    const idx = activeSelectedWords.indexOf(word);
-    if (idx > -1) {
-      activeSelectedWords.splice(idx, 1);
-      tileEl.classList.remove('selected');
-      tileEl.setAttribute('aria-pressed', 'false');
-      sfx.playDeselect();
-    } else {
-      if (activeSelectedWords.length >= 4) {
-        sfx.playError();
-        showToast("Maximum 4 words selected");
+    showScreen(name) {
+      [this.screenMenu, this.screenGame, this.screenVault].forEach(s => s.classList.remove("screen-active"));
+      if (name === "menu") {
+        this.screenMenu.classList.add("screen-active");
+        this.physics.setActiveGameMode(false);
+      } else if (name === "game") {
+        this.screenGame.classList.add("screen-active");
+        this.physics.setActiveGameMode(true);
+      } else if (name === "vault") {
+        this.screenVault.classList.add("screen-active");
+        this.physics.setActiveGameMode(false);
+        this.renderVault();
+      }
+    }
+
+    openModal(modal) {
+      modal.removeAttribute("hidden");
+    }
+
+    closeModal(modal) {
+      modal.setAttribute("hidden", "");
+    }
+
+    renderMenu() {
+      const todayPuzzle = DailyScheduler.getPuzzleForIndex(this.currentDayIndex);
+      if (!todayPuzzle) return;
+
+      const progress = this.state.puzzleProgress[todayPuzzle.id];
+      const isCompleted = progress && progress.completed;
+      const inProgress = progress && !progress.completed && (progress.solvedGroupIndices.length > 0 || progress.mistakesRemaining < MAX_MISTAKES);
+
+      this.todayDayLabel.textContent = `Day ${todayPuzzle.sequence}`;
+      this.todayPuzzleTitle.textContent = todayPuzzle.title;
+
+      if (isCompleted) {
+        this.todayStatusText.textContent = progress.won ? "Solved" : "Completed";
+        this.todayStatusText.style.color = "#15803d";
+        this.btnPlayTodayText.textContent = "Review Board";
+      } else if (inProgress) {
+        this.todayStatusText.textContent = "In Progress";
+        this.todayStatusText.style.color = "var(--ink-secondary)";
+        this.btnPlayTodayText.textContent = "Continue";
+      } else {
+        this.todayStatusText.textContent = "Unplayed";
+        this.todayStatusText.style.color = "var(--ink-muted)";
+        this.btnPlayTodayText.textContent = "Play";
+      }
+
+      const released = DailyScheduler.getReleasedPuzzles(this.currentDayIndex);
+      this.vaultCountLabel.textContent = `${released.length} Released Archive${released.length === 1 ? "" : "s"}`;
+    }
+
+    renderVault() {
+      this.vaultList.innerHTML = "";
+      const released = DailyScheduler.getReleasedPuzzles(this.currentDayIndex);
+
+      if (!released.length) {
+        const emptyMsg = document.createElement("p");
+        emptyMsg.style.textAlign = "center";
+        emptyMsg.style.padding = "32px 20px";
+        emptyMsg.style.color = "var(--ink-muted)";
+        emptyMsg.style.fontWeight = "600";
+        emptyMsg.textContent = "Vault opens on Day 1 once today's inaugural puzzle is archived.";
+        this.vaultList.appendChild(emptyMsg);
         return;
       }
-      activeSelectedWords.push(word);
-      tileEl.classList.add('selected');
-      tileEl.setAttribute('aria-pressed', 'true');
-      sfx.playTap();
+
+      // Reverse chronological order for past archives
+      [...released].reverse().forEach(p => {
+        const progress = this.state.puzzleProgress[p.id];
+        const isSolved = progress && progress.completed && progress.won;
+        const isCompleted = progress && progress.completed;
+
+        const card = document.createElement("article");
+        card.className = "vault-card glass-panel-secondary";
+        card.tabIndex = 0;
+        card.setAttribute("role", "button");
+        card.setAttribute("aria-label", `${p.title}, ${DailyScheduler.formatPuzzleDate(p.releaseDate, p.sequence)}`);
+
+        card.innerHTML = `
+          <div class="vault-card-left">
+            <span class="vault-card-title">${p.title}</span>
+            <span class="vault-card-date">${DailyScheduler.formatPuzzleDate(p.releaseDate, p.sequence)} • ${p.curriculumCategory}</span>
+          </div>
+          <span class="vault-card-status ${isSolved ? "status-solved" : "status-unsolved"}">
+            ${isSolved ? "Solved" : (isCompleted ? "Ended" : "Play")}
+          </span>
+        `;
+
+        const openHandler = () => this.loadPuzzle(p, false);
+        card.addEventListener("click", openHandler);
+        card.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            openHandler();
+          }
+        });
+
+        this.vaultList.appendChild(card);
+      });
     }
 
-    btnSubmit.disabled = activeSelectedWords.length !== 4;
-    updateStatusText();
-    saveInProgressState();
-  }
+    loadPuzzle(puzzle, isToday) {
+      if (!puzzle) return;
+      this.activePuzzle = puzzle;
+      this.selectedWords = [];
+      this.guessHistory = [];
 
-  function handleDeselectAll() {
-    if (activeSelectedWords.length === 0) return;
-    activeSelectedWords = [];
-    sfx.playDeselect();
-    renderGrid();
-    saveInProgressState();
-  }
+      this.gameDateBadge.textContent = isToday ? "Today" : `Vault • Day ${puzzle.sequence}`;
+      this.gameTitleText.textContent = puzzle.title;
 
-  function handleShuffle() {
-    sfx.playShuffle();
-    remainingTiles = shuffleArray(remainingTiles);
-    renderGrid();
-    saveInProgressState();
-  }
-
-  function getWordCategoryLevel(word) {
-    if (!activePuzzle) return 0;
-    for (const cat of activePuzzle.categories) {
-      const match = cat.words.some(w => w.trim().toUpperCase() === word);
-      if (match) return cat.level;
-    }
-    return 0;
-  }
-
-  function handleSubmit() {
-    if (activeSelectedWords.length !== 4) return;
-
-    const currentGuessSorted = [...activeSelectedWords].sort().join('|');
-    if (guessedWordCombos.includes(currentGuessSorted)) {
-      sfx.playError();
-      triggerGridShake();
-      showToast("Already guessed!");
-      return;
-    }
-    guessedWordCombos.push(currentGuessSorted);
-
-    const guessLevels = activeSelectedWords.map(w => getWordCategoryLevel(w));
-    guessHistory.push(guessLevels);
-
-    let matchedCategory = null;
-    for (const cat of activePuzzle.categories) {
-      const catWordSet = new Set(cat.words.map(w => w.trim().toUpperCase()));
-      const isMatch = activeSelectedWords.every(w => catWordSet.has(w));
-      if (isMatch) {
-        matchedCategory = cat;
-        break;
+      const saved = this.state.puzzleProgress[puzzle.id];
+      if (saved) {
+        this.solvedCategoryIndices = [...saved.solvedGroupIndices];
+        this.mistakesRemaining = saved.mistakesRemaining;
+        this.isGameOver = saved.completed;
+        this.guessHistory = saved.guessHistory || [];
+      } else {
+        this.solvedCategoryIndices = [];
+        this.mistakesRemaining = MAX_MISTAKES;
+        this.isGameOver = false;
+        this.guessHistory = [];
       }
+
+      // Build remaining words list
+      this.remainingWords = [];
+      this.activePuzzle.groups.forEach((grp, idx) => {
+        if (!this.solvedCategoryIndices.includes(idx)) {
+          grp.items.forEach(word => this.remainingWords.push(word));
+        }
+      });
+
+      this.shuffleArray(this.remainingWords);
+      this.renderSolvedRows();
+      this.renderTiles();
+      this.renderMistakesUi();
+      this.updateControlsState();
+      this.showScreen("game");
     }
 
-    if (matchedCategory) {
-      sfx.playSuccess();
-      solvedCategories.push(matchedCategory);
+    renderSolvedRows() {
+      this.solvedContainer.innerHTML = "";
+      this.solvedCategoryIndices.forEach(idx => {
+        const grp = this.activePuzzle.groups[idx];
+        const row = document.createElement("div");
+        row.className = `solved-group-row tier-${grp.level}`;
+        row.innerHTML = `
+          <div class="solved-group-name">${grp.category}</div>
+          <div class="solved-group-words">${grp.items.join(", ")}</div>
+        `;
+        this.solvedContainer.appendChild(row);
+      });
+    }
 
-      remainingTiles = remainingTiles.filter(t => !activeSelectedWords.includes(t.word));
-      activeSelectedWords = [];
+    renderTiles() {
+      this.gridContainer.innerHTML = "";
+      this.remainingWords.forEach(word => {
+        const tile = document.createElement("button");
+        tile.type = "button";
+        tile.className = "word-tile";
+        if (this.selectedWords.includes(word)) {
+          tile.classList.add("selected");
+          tile.setAttribute("aria-pressed", "true");
+        } else {
+          tile.setAttribute("aria-pressed", "false");
+        }
 
-      renderSolvedCategoryBanner(matchedCategory);
-      renderGrid();
-      saveInProgressState();
+        tile.textContent = word;
+        tile.addEventListener("click", () => this.toggleTile(word));
+        this.gridContainer.appendChild(tile);
+      });
+    }
 
-      if (remainingTiles.length === 0) {
-        setTimeout(() => handleGameEnd(true), 450);
+    renderMistakesUi() {
+      const indicators = this.mistakeStonesWrap.querySelectorAll(".stone-indicator");
+      indicators.forEach((indicator, idx) => {
+        if (idx < this.mistakesRemaining) {
+          indicator.classList.add("active");
+        } else {
+          indicator.classList.remove("active");
+        }
+      });
+    }
+
+    toggleTile(word) {
+      if (this.isGameOver) return;
+
+      const idx = this.selectedWords.indexOf(word);
+      if (idx > -1) {
+        this.selectedWords.splice(idx, 1);
+        this.sound.play("deselect");
+      } else {
+        if (this.selectedWords.length >= 4) return;
+        this.selectedWords.push(word);
+        this.sound.play("tap");
       }
-    } else {
-      let isOneAway = false;
-      for (const cat of activePuzzle.categories) {
-        const catWordSet = new Set(cat.words.map(w => w.trim().toUpperCase()));
-        const matchCount = activeSelectedWords.filter(w => catWordSet.has(w)).length;
-        if (matchCount === 3) {
-          isOneAway = true;
+
+      this.renderTiles();
+      this.updateControlsState();
+    }
+
+    updateControlsState() {
+      const count = this.selectedWords.length;
+      this.btnDeselectAll.disabled = count === 0 || this.isGameOver;
+      this.btnSubmit.disabled = count !== 4 || this.isGameOver;
+    }
+
+    deselectAll() {
+      if (this.selectedWords.length === 0) return;
+      this.selectedWords = [];
+      this.sound.play("deselect");
+      this.renderTiles();
+      this.updateControlsState();
+    }
+
+    shuffleRemaining() {
+      if (this.remainingWords.length <= 1) return;
+      this.sound.play("tap");
+      this.shuffleArray(this.remainingWords);
+      this.renderTiles();
+    }
+
+    showToast(message) {
+      this.toastMessage.textContent = message;
+      this.toastMessage.classList.add("toast-visible");
+      clearTimeout(this.toastTimeout);
+      this.toastTimeout = setTimeout(() => {
+        this.toastMessage.classList.remove("toast-visible");
+      }, 2400);
+    }
+
+    submitGuess() {
+      if (this.selectedWords.length !== 4 || this.isGameOver) return;
+
+      // Duplicate guess check
+      const sortedCurrentGuess = [...this.selectedWords].sort().join("|");
+      const alreadyGuessed = this.guessHistory.some(g => [...g].sort().join("|") === sortedCurrentGuess);
+      if (alreadyGuessed) {
+        this.showToast("Already guessed!");
+        this.shakeSelectedTiles();
+        return;
+      }
+
+      this.guessHistory.push([...this.selectedWords]);
+
+      // Category matching
+      let matchedCategoryIndex = -1;
+      let highestOverlap = 0;
+
+      for (let i = 0; i < this.activePuzzle.groups.length; i++) {
+        if (this.solvedCategoryIndices.includes(i)) continue;
+        const grp = this.activePuzzle.groups[i];
+        const matchCount = this.selectedWords.filter(w => grp.items.includes(w)).length;
+        if (matchCount === 4) {
+          matchedCategoryIndex = i;
           break;
         }
+        if (matchCount > highestOverlap) {
+          highestOverlap = matchCount;
+        }
       }
 
-      sfx.playError();
-      triggerGridShake();
+      if (matchedCategoryIndex > -1) {
+        // Solved a category
+        this.sound.play("solve");
+        this.solvedCategoryIndices.push(matchedCategoryIndex);
+        const solvedGroup = this.activePuzzle.groups[matchedCategoryIndex];
 
-      mistakesRemaining--;
-      updateMistakesUI();
-      saveInProgressState();
+        // Remove words from active grid
+        this.remainingWords = this.remainingWords.filter(w => !solvedGroup.items.includes(w));
+        this.selectedWords = [];
 
-      if (isOneAway) {
-        showToast("One away...");
-      } else {
-        showToast("Incorrect guess");
-      }
+        this.renderSolvedRows();
+        this.renderTiles();
+        this.updateControlsState();
 
-      if (mistakesRemaining <= 0) {
-        setTimeout(() => handleGameOverLoss(), 500);
-      }
-    }
-  }
-
-  function renderSolvedCategoryBanner(category) {
-    const banner = document.createElement('div');
-    banner.className = `solved-banner lvl-${category.level}`;
-    banner.innerHTML = `
-      <div class="solved-group-title">${category.title}</div>
-      <div class="solved-words">${category.words.join(' • ')}</div>
-    `;
-    completedRack.appendChild(banner);
-  }
-
-  function updateMistakesUI() {
-    const stones = mistakesRack.querySelectorAll('.stone-life');
-    stones.forEach((st, idx) => {
-      if (idx < mistakesRemaining) {
-        st.classList.add('active');
-        st.classList.remove('burnt');
-      } else {
-        st.classList.remove('active');
-        st.classList.add('burnt');
-      }
-    });
-    mistakesRack.setAttribute('aria-label', `${mistakesRemaining} mistakes remaining`);
-  }
-
-  function triggerGridShake() {
-    const tiles = puzzleGrid.querySelectorAll('.word-tile.selected');
-    tiles.forEach(t => t.classList.add('shake'));
-    setTimeout(() => {
-      tiles.forEach(t => t.classList.remove('shake'));
-    }, 420);
-  }
-
-  function handleGameOverLoss() {
-    showToast("Out of guesses! Revealing solutions.");
-    activePuzzle.categories.forEach(cat => {
-      const alreadySolved = solvedCategories.some(sc => sc.title === cat.title);
-      if (!alreadySolved) {
-        renderSolvedCategoryBanner(cat);
-      }
-    });
-    remainingTiles = [];
-    renderGrid();
-    handleGameEnd(false);
-  }
-
-  function handleGameEnd(won) {
-    if (won) {
-      sfx.playWin();
-    }
-
-    const isDaily = activePuzzle.id === getDailyPuzzle().id;
-
-    AppState.solvedPuzzles[activePuzzle.id] = {
-      won: won,
-      mistakesRemaining: mistakesRemaining,
-      history: guessHistory,
-      completedAt: TODAY_STR
-    };
-
-    updateCareerStats(won, mistakesRemaining, isDaily);
-    clearInProgressState(activePuzzle.id);
-    updateMenuMeta();
-
-    setTimeout(() => openGameOverModal(won), 450);
-  }
-
-  function updateCareerStats(won, stonesLeft, isDaily) {
-    const s = AppState.stats;
-    s.played++;
-    if (won) {
-      s.wins++;
-      if (isDaily) {
-        const yesterday = new Date();
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
-
-        if (s.lastDailyDate === yStr) {
-          s.currentStreak++;
-        } else if (s.lastDailyDate === TODAY_STR) {
+        if (this.solvedCategoryIndices.length === 4) {
+          this.endGame(true);
         } else {
-          s.currentStreak = 1;
+          this.saveCurrentPuzzleState();
+        }
+      } else {
+        // Mistake made
+        this.sound.play("mistake");
+        this.mistakesRemaining = Math.max(0, this.mistakesRemaining - 1);
+        this.renderMistakesUi();
+        this.shakeSelectedTiles();
+
+        if (highestOverlap === 3) {
+          this.showToast("One away...");
         }
 
-        if (s.currentStreak > s.maxStreak) {
-          s.maxStreak = s.currentStreak;
+        if (this.mistakesRemaining === 0) {
+          this.endGame(false);
+        } else {
+          this.saveCurrentPuzzleState();
         }
-        s.lastDailyDate = TODAY_STR;
-      }
-      if (stonesLeft >= 1 && stonesLeft <= 4) {
-        s.distribution[stonesLeft] = (s.distribution[stonesLeft] || 0) + 1;
-      }
-    } else {
-      if (isDaily) {
-        s.currentStreak = 0;
-        s.lastDailyDate = TODAY_STR;
       }
     }
-    saveGameState(AppState);
-  }
 
-  function openGameOverModal(won) {
-    modalBanner.textContent = won ? "VICTORY" : "GAME OVER";
-    modalTitle.textContent = won ? "PUZZLE SOLVED!" : "OUT OF GUESSES";
-    modalSub.textContent = won
-      ? "You found all four categories."
-      : "Here are the category solutions for this puzzle.";
-
-    shareGridPreview.innerHTML = '';
-    const levelColors = ['#facc15', '#86efac', '#7dd3fc', '#d8b4fe'];
-    const history = AppState.solvedPuzzles[activePuzzle.id]?.history || guessHistory;
-
-    history.forEach(row => {
-      const rowEl = document.createElement('div');
-      rowEl.className = 'share-grid-row';
-      row.forEach(lvl => {
-        const block = document.createElement('div');
-        block.className = 'share-block';
-        block.style.backgroundColor = levelColors[lvl] || '#94a3b8';
-        rowEl.appendChild(block);
+    shakeSelectedTiles() {
+      const tileEls = this.gridContainer.querySelectorAll(".word-tile.selected");
+      tileEls.forEach(el => {
+        el.classList.add("shake");
+        setTimeout(() => el.classList.remove("shake"), 450);
       });
-      shareGridPreview.appendChild(rowEl);
-    });
-
-    gameModal.classList.remove('hidden');
-  }
-
-  function generateShareText() {
-    const puzzleTitle = activePuzzle ? activePuzzle.name : "Word Connections";
-    const history = AppState.solvedPuzzles[activePuzzle.id]?.history || guessHistory;
-    const emojiMap = ['🟨', '🟩', '🟦', '🟪'];
-    
-    let text = `BUTTON CURL 🍁\n${puzzleTitle}\n`;
-    history.forEach(row => {
-      text += row.map(lvl => emojiMap[lvl] || '⬜').join('') + '\n';
-    });
-    return text.trim();
-  }
-
-  function renderStatsModal() {
-    const s = AppState.stats;
-    statPlayed.textContent = s.played;
-    statWinRate.textContent = s.played > 0 ? `${Math.round((s.wins / s.played) * 100)}%` : '0%';
-    statCurrentStreak.textContent = s.currentStreak;
-    statMaxStreak.textContent = s.maxStreak;
-
-    distBarsRack.innerHTML = '';
-    const maxVal = Math.max(...Object.values(s.distribution), 1);
-
-    [4, 3, 2, 1].forEach(mistakes => {
-      const count = s.distribution[mistakes] || 0;
-      const pct = Math.max(Math.round((count / maxVal) * 100), 12);
-
-      const row = document.createElement('div');
-      row.className = 'dist-row';
-      row.innerHTML = `
-        <span class="dist-stone-count">${mistakes} Left</span>
-        <div class="dist-bar-track">
-          <div class="dist-bar-fill" style="width: ${count > 0 ? pct : 12}%">${count}</div>
-        </div>
-      `;
-      distBarsRack.appendChild(row);
-    });
-
-    statsModal.classList.remove('hidden');
-  }
-
-  function showToast(msg) {
-    toastBanner.textContent = msg;
-    toastBanner.classList.add('visible');
-    setTimeout(() => {
-      toastBanner.classList.remove('visible');
-    }, 2000);
-  }
-
-  function shuffleArray(arr) {
-    const copy = [...arr];
-    for (let i = copy.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [copy[i], copy[j]] = [copy[j], copy[i]];
     }
-    return copy;
-  }
 
-  btnMenuDaily.addEventListener('click', () => {
-    sfx.playTap();
-    const daily = getDailyPuzzle();
-    if (daily) {
-      startPuzzle(daily);
+    endGame(won) {
+      this.isGameOver = true;
+      this.updateControlsState();
+
+      if (!won) {
+        // Reveal remaining categories cleanly
+        this.activePuzzle.groups.forEach((grp, idx) => {
+          if (!this.solvedCategoryIndices.includes(idx)) {
+            this.solvedCategoryIndices.push(idx);
+          }
+        });
+        this.remainingWords = [];
+        this.renderSolvedRows();
+        this.renderTiles();
+      } else {
+        this.sound.play("win");
+      }
+
+      // Update Player Statistics on first resolution
+      const priorState = this.state.puzzleProgress[this.activePuzzle.id];
+      const wasAlreadyCompleted = priorState && priorState.completed;
+
+      if (!wasAlreadyCompleted) {
+        this.state.stats.played += 1;
+        if (won) {
+          this.state.stats.won += 1;
+          this.state.stats.currentStreak += 1;
+          if (this.state.stats.currentStreak > this.state.stats.maxStreak) {
+            this.state.stats.maxStreak = this.state.stats.currentStreak;
+          }
+        } else {
+          this.state.stats.currentStreak = 0;
+        }
+      }
+
+      this.saveCurrentPuzzleState(won);
+      setTimeout(() => this.showResultModal(won), 650);
     }
-  });
 
-  btnMenuVault.addEventListener('click', () => {
-    sfx.playTap();
-    renderVaultList();
-    switchScreen('vault', 'ARCHIVE');
-  });
+    saveCurrentPuzzleState(won = null) {
+      if (!this.activePuzzle) return;
+      const priorCompleted = this.state.puzzleProgress[this.activePuzzle.id]?.completed || false;
+      const priorWon = this.state.puzzleProgress[this.activePuzzle.id]?.won || false;
 
-  btnMenuInstructions.addEventListener('click', () => {
-    sfx.playTap();
-    switchScreen('instructions', 'HOW TO PLAY');
-  });
-
-  btnCloseInstructions.addEventListener('click', () => {
-    sfx.playTap();
-    switchScreen('menu', 'DAILY PUZZLE');
-  });
-
-  btnHome.addEventListener('click', () => {
-    sfx.playTap();
-    updateMenuMeta();
-    switchScreen('menu', 'DAILY PUZZLE');
-  });
-
-  btnShuffle.addEventListener('click', handleShuffle);
-  btnDeselect.addEventListener('click', handleDeselectAll);
-  btnSubmit.addEventListener('click', handleSubmit);
-
-  btnSound.addEventListener('click', () => {
-    sfx.enabled = !sfx.enabled;
-    AppState.settings.soundEnabled = sfx.enabled;
-    saveGameState(AppState);
-    updateSoundUI();
-    if (sfx.enabled) sfx.playTap();
-  });
-
-  btnStatsToggle.addEventListener('click', () => {
-    sfx.playTap();
-    renderStatsModal();
-  });
-
-  btnCloseStats.addEventListener('click', () => {
-    sfx.playTap();
-    statsModal.classList.add('hidden');
-  });
-
-  btnStatsReturn.addEventListener('click', () => {
-    sfx.playTap();
-    statsModal.classList.add('hidden');
-  });
-
-  statsModal.addEventListener('click', (e) => {
-    if (e.target === statsModal) {
-      sfx.playTap();
-      statsModal.classList.add('hidden');
+      this.state.puzzleProgress[this.activePuzzle.id] = {
+        solvedGroupIndices: this.solvedCategoryIndices,
+        mistakesRemaining: this.mistakesRemaining,
+        completed: this.isGameOver || priorCompleted,
+        won: won !== null ? won : priorWon,
+        guessHistory: this.guessHistory
+      };
+      StorageManager.save(this.state);
     }
-  });
 
-  btnModalStats.addEventListener('click', () => {
-    sfx.playTap();
-    gameModal.classList.add('hidden');
-    renderStatsModal();
-  });
+    showResultModal(won) {
+      this.resultOutcomeMsg.textContent = won ? "Shot of the Day! All Categories Solved." : "Good Effort! End of Attempts.";
+      this.resultMistakesUsed.textContent = `Mistakes used: ${MAX_MISTAKES - this.mistakesRemaining} of ${MAX_MISTAKES}`;
 
-  btnShareResult.addEventListener('click', () => {
-    sfx.playTap();
-    const text = generateShareText();
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(() => {
-        showToast("Scorecard copied to clipboard!");
-      }).catch(() => {
-        fallbackCopyText(text);
+      // Build Result Visual Grid
+      this.resultEmojiGrid.innerHTML = "";
+      const tierEmoji = {
+        1: "🟨", // Gold handle
+        2: "🟦", // Outer blue ring
+        3: "🟥", // Inner red ring
+        4: "🟪"  // Scottish granite purple
+      };
+
+      this.guessHistory.forEach(guess => {
+        const row = document.createElement("div");
+        const squares = guess.map(word => {
+          for (let i = 0; i < this.activePuzzle.groups.length; i++) {
+            if (this.activePuzzle.groups[i].items.includes(word)) {
+              return tierEmoji[this.activePuzzle.groups[i].level] || "🟦";
+            }
+          }
+          return "⬜";
+        }).join(" ");
+        row.textContent = squares;
+        this.resultEmojiGrid.appendChild(row);
       });
-    } else {
-      fallbackCopyText(text);
-    }
-  });
 
-  function fallbackCopyText(text) {
-    try {
-      const tempArea = document.createElement('textarea');
-      tempArea.value = text;
-      tempArea.style.position = 'fixed';
-      tempArea.style.top = '-9999px';
-      tempArea.style.left = '-9999px';
-      document.body.appendChild(tempArea);
-      tempArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(tempArea);
-      showToast("Scorecard copied to clipboard!");
-    } catch (err) {
-      showToast("Sharing not supported on this device");
+      this.openModal(this.modalResult);
+    }
+
+    shareResult() {
+      const tierEmoji = { 1: "🟨", 2: "🟦", 3: "🟥", 4: "🟪" };
+      let text = `Curling Connections\n${this.activePuzzle.title}\n`;
+
+      this.guessHistory.forEach(guess => {
+        const rowStr = guess.map(word => {
+          for (let i = 0; i < this.activePuzzle.groups.length; i++) {
+            if (this.activePuzzle.groups[i].items.includes(word)) {
+              return tierEmoji[this.activePuzzle.groups[i].level] || "🟦";
+            }
+          }
+          return "⬜";
+        }).join("");
+        text += rowStr + "\n";
+      });
+
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => {
+          this.showToast("Result copied to clipboard!");
+        }).catch(() => {
+          this.showToast("Could not copy result.");
+        });
+      }
+    }
+
+    openStatsModal() {
+      const s = this.state.stats;
+      this.statPlayed.textContent = s.played;
+      const rate = s.played > 0 ? Math.round((s.won / s.played) * 100) : 0;
+      this.statWinRate.textContent = `${rate}%`;
+      this.statCurrentStreak.textContent = s.currentStreak;
+      this.statMaxStreak.textContent = s.maxStreak;
+      this.openModal(this.modalStats);
+    }
+
+    shuffleArray(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
     }
   }
 
-  btnModalExit.addEventListener('click', () => {
-    sfx.playTap();
-    gameModal.classList.add('hidden');
-    updateMenuMeta();
-    switchScreen('menu', 'DAILY PUZZLE');
+  // Launch once DOM is ready
+  document.addEventListener("DOMContentLoaded", () => {
+    window.curlingConnectionsApp = new CurlingConnectionsApp();
   });
-
-  gameModal.addEventListener('click', (e) => {
-    if (e.target === gameModal) {
-      sfx.playTap();
-      gameModal.classList.add('hidden');
-    }
-  });
-
-  window.addEventListener('keydown', (e) => {
-    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-
-    if (e.key === 'Escape') {
-      if (!statsModal.classList.contains('hidden')) {
-        statsModal.classList.add('hidden');
-        return;
-      }
-      if (!gameModal.classList.contains('hidden')) {
-        gameModal.classList.add('hidden');
-        return;
-      }
-      handleDeselectAll();
-    } else if (e.key === 'Backspace') {
-      if (screens.game.classList.contains('active')) {
-        handleDeselectAll();
-      }
-    } else if (e.key === 'Enter') {
-      if (screens.game.classList.contains('active') && !btnSubmit.disabled) {
-        handleSubmit();
-      }
-    }
-  });
-
-  function init() {
-    updateSoundUI();
-    updateMenuMeta();
-    switchScreen('menu', 'DAILY PUZZLE');
-  }
-
-  init();
 })();
