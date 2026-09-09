@@ -6,7 +6,7 @@
  * - Cached Procedural Granite & Gooseneck Handle Sprites (Red & Yellow Teams)
  * - Synthetic Web Audio SFX (Zero External Dependencies)
  * - Versioned LocalStorage State Persistence
- * - Strict Future Content Privacy
+ * - Universal Cross-Browser Compatibility (iOS WebKit roundRect & Visibility API Hardening)
  */
 
 (function () {
@@ -21,7 +21,31 @@
   const MAX_MISTAKES = 4;
 
   /* ==========================================================================
-     2. SYNTHETIC AUDIO ENGINE (Web Audio API)
+     2. CROSS-BROWSER UTILITY HELPERS
+     ========================================================================== */
+  /**
+   * Safe rounded-rect path builder fallback for WebKit / Safari < 16
+   */
+  function drawRoundRectPath(ctx, x, y, width, height, radius) {
+    if (typeof ctx.roundRect === "function") {
+      ctx.roundRect(x, y, width, height, radius);
+    } else {
+      const r = Math.min(radius, width / 2, height / 2);
+      ctx.moveTo(x + r, y);
+      ctx.lineTo(x + width - r, y);
+      ctx.arcTo(x + width, y, x + width, y + r, r);
+      ctx.lineTo(x + width, y + height - r);
+      ctx.arcTo(x + width, y + height, x + width - r, y + height, r);
+      ctx.lineTo(x + r, y + height);
+      ctx.arcTo(x, y + height, x, y + height - r, r);
+      ctx.lineTo(x, y + r);
+      ctx.arcTo(x, y, x + r, y, r);
+      ctx.closePath();
+    }
+  }
+
+  /* ==========================================================================
+     3. SYNTHETIC AUDIO ENGINE (Web Audio API)
      ========================================================================== */
   class SoundController {
     constructor() {
@@ -33,6 +57,9 @@
       if (!this.ctx && (window.AudioContext || window.webkitAudioContext)) {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         this.ctx = new AudioCtx();
+      }
+      if (this.ctx && this.ctx.state === "suspended") {
+        this.ctx.resume().catch(() => {});
       }
     }
 
@@ -46,9 +73,6 @@
       try {
         this.init();
         if (!this.ctx) return;
-        if (this.ctx.state === "suspended") {
-          this.ctx.resume();
-        }
 
         const now = this.ctx.currentTime;
         const osc = this.ctx.createOscillator();
@@ -58,7 +82,6 @@
 
         switch (type) {
           case "tap":
-            // Crisp stone click
             osc.type = "sine";
             osc.frequency.setValueAtTime(560, now);
             osc.frequency.exponentialRampToValueAtTime(840, now + 0.04);
@@ -69,7 +92,6 @@
             break;
 
           case "deselect":
-            // Soft stone slide back
             osc.type = "sine";
             osc.frequency.setValueAtTime(440, now);
             osc.frequency.exponentialRampToValueAtTime(290, now + 0.05);
@@ -80,7 +102,6 @@
             break;
 
           case "solve":
-            // Harmonious curling 4-note chime
             [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
               const subOsc = this.ctx.createOscillator();
               const subGain = this.ctx.createGain();
@@ -95,7 +116,6 @@
             break;
 
           case "mistake":
-            // Low double bump
             osc.type = "triangle";
             osc.frequency.setValueAtTime(170, now);
             osc.frequency.setValueAtTime(135, now + 0.08);
@@ -106,7 +126,6 @@
             break;
 
           case "win":
-            // Celebratory fanfare
             [523.25, 659.25, 783.99, 1046.5, 1318.51].forEach((freq, idx) => {
               const subOsc = this.ctx.createOscillator();
               const subGain = this.ctx.createGain();
@@ -121,13 +140,13 @@
             break;
         }
       } catch (err) {
-        // Safe silence on autoplay policy restriction
+        // Silent recovery on strict autoplay restriction
       }
     }
   }
 
   /* ==========================================================================
-     3. 2D BACKGROUND CURLING STONE PHYSICS WITH SPRITE CACHING
+     4. 2D BACKGROUND CURLING STONE PHYSICS WITH MATRIX HARDENING
      ========================================================================== */
   class BackgroundPhysics {
     constructor(canvasId) {
@@ -138,10 +157,11 @@
       this.activeGame = false;
       this.reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
-      // Fixed timestep accumulator
+      // Fixed timestep accumulator (60Hz)
       this.lastTime = performance.now();
       this.fixedStep = 1 / 60;
       this.accumulator = 0;
+      this.dpr = 1;
 
       // High-speed entry event timer
       this.nextAggressiveTime = performance.now() + 25000 + Math.random() * 15000;
@@ -169,9 +189,7 @@
         ctx.beginPath();
         ctx.ellipse(cx, cy + 3, r * 0.98, r * 0.90, 0, 0, Math.PI * 2);
         ctx.fillStyle = "rgba(16, 47, 74, 0.18)";
-        ctx.filter = "blur(3px)";
         ctx.fill();
-        ctx.filter = "none";
 
         // 2. Base Granite Body (Ailsa Craig Blue-Grey)
         const graniteGrad = ctx.createRadialGradient(cx - r * 0.25, cy - r * 0.25, r * 0.1, cx, cy, r);
@@ -185,7 +203,7 @@
         ctx.fillStyle = graniteGrad;
         ctx.fill();
 
-        // 3. Granite Micro-speckling (Procedural Quartz & Hornblende flecks)
+        // 3. Granite Micro-speckling
         ctx.save();
         ctx.beginPath();
         ctx.arc(cx, cy, r - 1, 0, Math.PI * 2);
@@ -223,9 +241,8 @@
         ctx.stroke();
 
         // 5. Gooseneck Handle with Fastener Studs
-        // Handle Shadow on granite
         ctx.beginPath();
-        ctx.roundRect(cx - r * 0.38, cy - r * 0.12 + 2, r * 0.76, r * 0.28, 5);
+        drawRoundRectPath(ctx, cx - r * 0.38, cy - r * 0.12 + 2, r * 0.76, r * 0.28, 5);
         ctx.fillStyle = "rgba(0, 0, 0, 0.3)";
         ctx.fill();
 
@@ -238,7 +255,7 @@
 
         // Handle Main Body
         ctx.beginPath();
-        ctx.roundRect(cx - r * 0.36, cy - r * 0.13, r * 0.72, r * 0.26, 4);
+        drawRoundRectPath(ctx, cx - r * 0.36, cy - r * 0.13, r * 0.72, r * 0.26, 4);
         if (team === "red") {
           const hGrad = ctx.createLinearGradient(cx, cy - r * 0.13, cx, cy + r * 0.13);
           hGrad.addColorStop(0, "#ee6865");
@@ -266,15 +283,50 @@
       window.addEventListener("resize", () => this.resize(), { passive: true });
       this.spawnStones();
       if (!this.reducedMotion) {
-        this.loop();
+        this.resume();
       } else {
         this.drawStaticFrame();
       }
+
+      // Visibility economy binding: pause on background tab
+      document.addEventListener("visibilitychange", () => {
+        if (document.hidden) {
+          this.pause();
+        } else {
+          this.resume();
+        }
+      });
     }
 
     resize() {
-      this.width = this.canvas.width = window.innerWidth;
-      this.height = this.canvas.height = window.innerHeight;
+      // Clamped devicePixelRatio eliminates excessive GPU RAM allocation on mobile screens
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      this.dpr = dpr;
+      this.width = window.innerWidth;
+      this.height = window.innerHeight;
+
+      this.canvas.width = Math.floor(this.width * dpr);
+      this.canvas.height = Math.floor(this.height * dpr);
+      this.canvas.style.width = `${this.width}px`;
+      this.canvas.style.height = `${this.height}px`;
+
+      // Absolute matrix reset prevents compounding transformation bugs on mobile resize
+      this.ctx.setTransform(1, 0, 0, 1, 0, 0);
+      this.ctx.scale(dpr, dpr);
+    }
+
+    pause() {
+      if (this.animId) {
+        cancelAnimationFrame(this.animId);
+        this.animId = null;
+      }
+    }
+
+    resume() {
+      if (this.reducedMotion || this.animId) return;
+      this.lastTime = performance.now();
+      this.accumulator = 0;
+      this.loop();
     }
 
     spawnStones() {
@@ -287,7 +339,6 @@
         let x = Math.random() * (this.width - radius * 4) + radius * 2;
         let y = Math.random() * (this.height - radius * 4) + radius * 2;
 
-        // Ensure clean non-overlapping initial placement
         for (let j = 0; j < this.stones.length; j++) {
           const dx = x - this.stones[j].x;
           const dy = y - this.stones[j].y;
@@ -299,7 +350,7 @@
         }
 
         const angle = Math.random() * Math.PI * 2;
-        const speed = 0.2 + Math.random() * 0.35; // Gentle curling ice glide
+        const speed = 0.2 + Math.random() * 0.35;
 
         this.stones.push({
           x,
@@ -347,19 +398,16 @@
     }
 
     stepSimulation() {
-      // 1. Position update & wall boundaries with restitution
       for (let i = 0; i < this.stones.length; i++) {
         const s = this.stones[i];
         s.x += s.vx;
         s.y += s.vy;
         s.rotation += s.vRot;
 
-        // Ice Friction Damping
         s.vx *= 0.9988;
         s.vy *= 0.9988;
         s.vRot *= 0.996;
 
-        // Maintain calm baseline motion
         const curSpeed = Math.hypot(s.vx, s.vy);
         if (curSpeed < 0.12 && !s.isAggressive) {
           const a = Math.random() * Math.PI * 2;
@@ -367,7 +415,6 @@
           s.vy = Math.sin(a) * 0.22;
         }
 
-        // Boundary bounce with slight damping
         if (s.x - s.radius < 0) {
           s.x = s.radius;
           s.vx = Math.abs(s.vx) * 0.85;
@@ -385,7 +432,6 @@
         }
       }
 
-      // 2. Pairwise Circle-Circle Collision Detection & Resolution
       for (let i = 0; i < this.stones.length; i++) {
         for (let j = i + 1; j < this.stones.length; j++) {
           const s1 = this.stones[i];
@@ -400,19 +446,15 @@
             const nx = dx / dist;
             const ny = dy / dist;
 
-            // Anti-sticking positional correction
             const overlap = (minDist - dist) * 0.5;
             s1.x -= nx * overlap;
             s1.y -= ny * overlap;
             s2.x += nx * overlap;
             s2.y += ny * overlap;
 
-            // Relative velocities along collision normal
             const kx = s1.vx - s2.vx;
             const ky = s1.vy - s2.vy;
             const p = 2 * (nx * kx + ny * ky) / (s1.mass + s2.mass);
-
-            // Curling Stone Restitution
             const restitution = 0.82;
 
             s1.vx -= p * s2.mass * nx * restitution;
@@ -420,7 +462,6 @@
             s2.vx += p * s1.mass * nx * restitution;
             s2.vy += p * s1.mass * ny * restitution;
 
-            // Rotation transfer
             s1.vRot += (Math.random() - 0.5) * 0.006;
             s2.vRot += (Math.random() - 0.5) * 0.006;
 
@@ -436,7 +477,6 @@
     render() {
       this.ctx.clearRect(0, 0, this.width, this.height);
 
-      // Render Soft Curling House Rink Rings
       const cx = this.width * 0.5;
       const cy = this.height * 0.32;
       const ringScale = Math.min(this.width, this.height) * 0.36;
@@ -444,31 +484,31 @@
       this.ctx.save();
       this.ctx.globalAlpha = 0.08;
 
-      // 12-Foot Outer Blue Ring
+      // 12-Foot Ring
       this.ctx.beginPath();
       this.ctx.arc(cx, cy, ringScale, 0, Math.PI * 2);
       this.ctx.fillStyle = "#1d4ed8";
       this.ctx.fill();
 
-      // 8-Foot White Ring
+      // 8-Foot Ring
       this.ctx.beginPath();
       this.ctx.arc(cx, cy, ringScale * 0.66, 0, Math.PI * 2);
       this.ctx.fillStyle = "#ffffff";
       this.ctx.fill();
 
-      // 4-Foot Red Ring
+      // 4-Foot Ring
       this.ctx.beginPath();
       this.ctx.arc(cx, cy, ringScale * 0.33, 0, Math.PI * 2);
       this.ctx.fillStyle = "#d63b3b";
       this.ctx.fill();
 
-      // Center Button
+      // The Button
       this.ctx.beginPath();
       this.ctx.arc(cx, cy, ringScale * 0.1, 0, Math.PI * 2);
       this.ctx.fillStyle = "#ffffff";
       this.ctx.fill();
 
-      // Rink Crosshairs (Tee Line & Centre Line)
+      // Tee & Centre Lines
       this.ctx.strokeStyle = "rgba(16, 47, 74, 0.4)";
       this.ctx.lineWidth = 1;
       this.ctx.beginPath();
@@ -480,7 +520,6 @@
 
       this.ctx.restore();
 
-      // Render Cached Curling Stones
       for (let i = 0; i < this.stones.length; i++) {
         const s = this.stones[i];
         const sprite = this.sprites[s.team];
@@ -507,13 +546,11 @@
       this.lastTime = now;
       this.accumulator += elapsed;
 
-      // High-speed delivery event check
       if (now > this.nextAggressiveTime) {
         this.spawnAggressiveRock();
         this.nextAggressiveTime = now + 30000 + Math.random() * 20000;
       }
 
-      // Fixed Timestep Simulation Loop
       while (this.accumulator >= this.fixedStep) {
         this.stepSimulation();
         this.accumulator -= this.fixedStep;
@@ -529,29 +566,25 @@
   }
 
   /* ==========================================================================
-     4. DETERMINISTIC DAILY SCHEDULER & CONTINUITY
+     5. DETERMINISTIC DAILY SCHEDULER
      ========================================================================== */
   class DailyScheduler {
     static getTodayIndex() {
       const now = new Date();
       const userMidnightUTC = Date.UTC(now.getFullYear(), now.getMonth(), now.getDate());
       const diffDays = Math.floor((userMidnightUTC - ANCHOR_DATE_UTC) / (1000 * 60 * 60 * 24));
-      // Prior to Sept 8, 2026, defaults to Day 0 for seamless verification and testing
       return Math.max(0, diffDays);
     }
 
     static getPuzzleForIndex(index) {
       const puzzles = window.CURLING_CONNECTIONS_PUZZLES || [];
       if (!puzzles.length) return null;
-      // Deterministic stable sequence assignment with safe wraparound
       const sequenceIndex = index % puzzles.length;
       return puzzles[sequenceIndex];
     }
 
     static getReleasedPuzzles(currentDayIndex) {
       const puzzles = window.CURLING_CONNECTIONS_PUZZLES || [];
-      // Vault displays strictly PAST released archives (sequence < currentDayIndex)
-      // Day 0: Vault is empty. Day 1: Vault contains Day 0.
       return puzzles.filter(p => p.sequence < currentDayIndex);
     }
 
@@ -569,7 +602,7 @@
   }
 
   /* ==========================================================================
-     5. VERSIONED STORAGE CONTROLLER
+     6. VERSIONED STORAGE CONTROLLER
      ========================================================================== */
   class StorageManager {
     static load() {
@@ -591,7 +624,7 @@
         data.version = STORAGE_VERSION;
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       } catch (err) {
-        // Gracefully handle storage quota or private browsing limits
+        // Safe silence for private browsing restrictions
       }
     }
 
@@ -605,13 +638,13 @@
           currentStreak: 0,
           maxStreak: 0
         },
-        puzzleProgress: {} // [puzzleId]: { solvedGroupIndices: [], mistakesRemaining: 4, completed: false, won: false, guessHistory: [] }
+        puzzleProgress: {}
       };
     }
   }
 
   /* ==========================================================================
-     6. MAIN CONNECTIONS APPLICATION ENGINE
+     7. MAIN CONNECTIONS APPLICATION ENGINE
      ========================================================================== */
   class CurlingConnectionsApp {
     constructor() {
@@ -622,6 +655,7 @@
 
       this.currentDayIndex = DailyScheduler.getTodayIndex();
       this.activePuzzle = null;
+      this.isTodayPuzzle = true;
       this.selectedWords = [];
       this.solvedCategoryIndices = [];
       this.remainingWords = [];
@@ -666,6 +700,7 @@
       this.solvedContainer = document.getElementById("solved-groups-container");
       this.gridContainer = document.getElementById("connections-grid");
       this.mistakeStonesWrap = document.getElementById("mistake-stones-wrap");
+      this.mistakesAccessibleCount = document.getElementById("mistakes-accessible-count");
 
       this.btnShuffle = document.getElementById("btn-shuffle");
       this.btnDeselectAll = document.getElementById("btn-deselect-all");
@@ -700,6 +735,15 @@
     }
 
     bindEvents() {
+      // Audio unlock on first touch
+      const audioUnlock = () => {
+        this.sound.init();
+        window.removeEventListener("pointerdown", audioUnlock);
+        window.removeEventListener("keydown", audioUnlock);
+      };
+      window.addEventListener("pointerdown", audioUnlock, { passive: true });
+      window.addEventListener("keydown", audioUnlock, { passive: true });
+
       // Menu Actions
       this.btnPlayToday.addEventListener("click", () => {
         const todayPuzzle = DailyScheduler.getPuzzleForIndex(this.currentDayIndex);
@@ -802,10 +846,17 @@
 
     openModal(modal) {
       modal.removeAttribute("hidden");
+      modal.setAttribute("aria-hidden", "false");
+      document.body.classList.add("modal-open");
     }
 
     closeModal(modal) {
       modal.setAttribute("hidden", "");
+      modal.setAttribute("aria-hidden", "true");
+      const anyOpen = [this.modalHelp, this.modalStats, this.modalResult].some(m => !m.hasAttribute("hidden"));
+      if (!anyOpen) {
+        document.body.classList.remove("modal-open");
+      }
     }
 
     renderMenu() {
@@ -852,7 +903,6 @@
         return;
       }
 
-      // Reverse chronological order for past archives
       [...released].reverse().forEach(p => {
         const progress = this.state.puzzleProgress[p.id];
         const isSolved = progress && progress.completed && progress.won;
@@ -890,6 +940,7 @@
     loadPuzzle(puzzle, isToday) {
       if (!puzzle) return;
       this.activePuzzle = puzzle;
+      this.isTodayPuzzle = isToday;
       this.selectedWords = [];
       this.guessHistory = [];
 
@@ -909,7 +960,6 @@
         this.guessHistory = [];
       }
 
-      // Build remaining words list
       this.remainingWords = [];
       this.activePuzzle.groups.forEach((grp, idx) => {
         if (!this.solvedCategoryIndices.includes(idx)) {
@@ -967,6 +1017,9 @@
           indicator.classList.remove("active");
         }
       });
+      if (this.mistakesAccessibleCount) {
+        this.mistakesAccessibleCount.textContent = `${this.mistakesRemaining} mistake${this.mistakesRemaining === 1 ? "" : "s"} remaining`;
+      }
     }
 
     toggleTile(word) {
@@ -1019,7 +1072,6 @@
     submitGuess() {
       if (this.selectedWords.length !== 4 || this.isGameOver) return;
 
-      // Duplicate guess check
       const sortedCurrentGuess = [...this.selectedWords].sort().join("|");
       const alreadyGuessed = this.guessHistory.some(g => [...g].sort().join("|") === sortedCurrentGuess);
       if (alreadyGuessed) {
@@ -1030,7 +1082,6 @@
 
       this.guessHistory.push([...this.selectedWords]);
 
-      // Category matching
       let matchedCategoryIndex = -1;
       let highestOverlap = 0;
 
@@ -1048,12 +1099,10 @@
       }
 
       if (matchedCategoryIndex > -1) {
-        // Solved a category
         this.sound.play("solve");
         this.solvedCategoryIndices.push(matchedCategoryIndex);
         const solvedGroup = this.activePuzzle.groups[matchedCategoryIndex];
 
-        // Remove words from active grid
         this.remainingWords = this.remainingWords.filter(w => !solvedGroup.items.includes(w));
         this.selectedWords = [];
 
@@ -1067,7 +1116,6 @@
           this.saveCurrentPuzzleState();
         }
       } else {
-        // Mistake made
         this.sound.play("mistake");
         this.mistakesRemaining = Math.max(0, this.mistakesRemaining - 1);
         this.renderMistakesUi();
@@ -1098,7 +1146,6 @@
       this.updateControlsState();
 
       if (!won) {
-        // Reveal remaining categories cleanly
         this.activePuzzle.groups.forEach((grp, idx) => {
           if (!this.solvedCategoryIndices.includes(idx)) {
             this.solvedCategoryIndices.push(idx);
@@ -1111,7 +1158,6 @@
         this.sound.play("win");
       }
 
-      // Update Player Statistics on first resolution
       const priorState = this.state.puzzleProgress[this.activePuzzle.id];
       const wasAlreadyCompleted = priorState && priorState.completed;
 
@@ -1119,11 +1165,13 @@
         this.state.stats.played += 1;
         if (won) {
           this.state.stats.won += 1;
-          this.state.stats.currentStreak += 1;
-          if (this.state.stats.currentStreak > this.state.stats.maxStreak) {
-            this.state.stats.maxStreak = this.state.stats.currentStreak;
+          if (this.isTodayPuzzle) {
+            this.state.stats.currentStreak += 1;
+            if (this.state.stats.currentStreak > this.state.stats.maxStreak) {
+              this.state.stats.maxStreak = this.state.stats.currentStreak;
+            }
           }
-        } else {
+        } else if (this.isTodayPuzzle) {
           this.state.stats.currentStreak = 0;
         }
       }
@@ -1151,13 +1199,12 @@
       this.resultOutcomeMsg.textContent = won ? "Shot of the Day! All Categories Solved." : "Good Effort! End of Attempts.";
       this.resultMistakesUsed.textContent = `Mistakes used: ${MAX_MISTAKES - this.mistakesRemaining} of ${MAX_MISTAKES}`;
 
-      // Build Result Visual Grid
       this.resultEmojiGrid.innerHTML = "";
       const tierEmoji = {
-        1: "🟨", // Gold handle
-        2: "🟦", // Outer blue ring
-        3: "🟥", // Inner red ring
-        4: "🟪"  // Scottish granite purple
+        1: "🟨",
+        2: "🟦",
+        3: "🟥",
+        4: "🟪"
       };
 
       this.guessHistory.forEach(guess => {
@@ -1193,12 +1240,38 @@
         text += rowStr + "\n";
       });
 
-      if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(text).then(() => {
-          this.showToast("Result copied to clipboard!");
-        }).catch(() => {
-          this.showToast("Could not copy result.");
+      const copySuccess = () => this.showToast("Result copied to clipboard!");
+      const copyFail = () => this.showToast("Could not copy result.");
+
+      if (navigator.clipboard && window.isSecureContext && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(copySuccess).catch(() => {
+          this.fallbackCopyText(text, copySuccess, copyFail);
         });
+      } else {
+        this.fallbackCopyText(text, copySuccess, copyFail);
+      }
+    }
+
+    fallbackCopyText(text, onSuccess, onFail) {
+      try {
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.top = "-9999px";
+        textArea.style.left = "-9999px";
+        textArea.setAttribute("readonly", "");
+        document.body.appendChild(textArea);
+        textArea.select();
+        textArea.setSelectionRange(0, 99999);
+        const successful = document.execCommand("copy");
+        document.body.removeChild(textArea);
+        if (successful) {
+          onSuccess();
+        } else {
+          onFail();
+        }
+      } catch (e) {
+        onFail();
       }
     }
 
@@ -1220,8 +1293,18 @@
     }
   }
 
-  // Launch once DOM is ready
-  document.addEventListener("DOMContentLoaded", () => {
-    window.curlingConnectionsApp = new CurlingConnectionsApp();
-  });
+  /* ==========================================================================
+     8. BULLETPROOF GITHUB PAGES BOOTSTRAPPER
+     ========================================================================== */
+  function bootCurlingConnections() {
+    if (!window.curlingConnectionsApp) {
+      window.curlingConnectionsApp = new CurlingConnectionsApp();
+    }
+  }
+
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", bootCurlingConnections);
+  } else {
+    bootCurlingConnections();
+  }
 })();
