@@ -3,315 +3,255 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-  <meta name="description" content="Curling Connections — A daily curling association puzzle from Curling Puzzles.">
-  <meta name="theme-color" content="#f4fafe">
-  <title>Curling Connections — Daily Puzzle</title>
+  <title>Connections — Canadian Curling Championship Edition</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <!-- Ambient Atmospheric Curling Sheet Background Canvas with Physics -->
-  <canvas id="curling-bg-canvas" aria-hidden="true"></canvas>
+  <!-- Decorative Ambient Curling Ice Atmosphere -->
+  <div class="ice-atmosphere" aria-hidden="true">
+    <div class="ice-vignette"></div>
+    <div class="ice-light-sweep-overlay"></div>
+    <div class="ice-pebble-texture"></div>
+    <div class="ice-lines-canvas">
+      <div class="ice-marking hog-line-top"></div>
+      <div class="ice-marking tee-line"></div>
+      <div class="ice-marking hog-line-bottom"></div>
+    </div>
+    <!-- Spatially randomized floating curling icons & maple leaves -->
+    <div id="ambient-curling-layer" class="ambient-curling-layer"></div>
+  </div>
 
-  <!-- Application Shell -->
-  <div id="app-shell" class="app-shell">
+  <!-- Mandatory Authoritative Maple Leaf SVG Definition Symbol -->
+  <svg class="svg-defs" aria-hidden="true" focusable="false" style="display:none;">
+    <defs>
+      <linearGradient id="mapleLeafGradientShared" y2="372.96" gradientUnits="userSpaceOnUse" y1="86.713" x2="411.88" x1="157.77">
+        <stop offset="0" stop-color="#d60021"/>
+        <stop offset="1" stop-color="#7a0011"/>
+      </linearGradient>
+      <filter id="mapleLeafShadowShared" color-interpolation-filters="sRGB">
+        <feGaussianBlur stdDeviation="9.319973"/>
+      </filter>
+      <g id="authoritative-maple-leaf" transform="translate(-250.85 -233.44)">
+        <path
+          d="m331.73 486.61 8.1527-20.11-65.765-60.873 17.392-9.2397-7.6092-44.568 39.676 4.3481 11.957-16.849 30.98 39.133-17.392-84.788 26.089 8.6962 25.001-45.655 23.371 44.568 27.719-7.6092-17.936 84.244 30.98-38.046 10.87 16.305 39.133-3.8046-5.9786 42.937 17.936 11.414-65.765 60.33 7.0656 21.197-58.699-9.7832 1.6305 72.83h-22.284l3.2611-73.374z"
+          style="opacity:.3;filter:url(#mapleLeafShadowShared);fill:#081726"
+        />
+        <path
+          d="m325.8 480.69 8.1527-20.11-65.765-60.873 17.392-9.2397-7.6092-44.568 39.676 4.3481 11.957-16.849 30.98 39.133-17.392-84.788 26.089 8.6962 25.001-45.655 23.371 44.568 27.719-7.6092-17.936 84.244 30.98-38.046 10.87 16.305 39.133-3.8046-5.9786 42.937 17.936 11.414-65.765 60.33 7.0656 21.197-58.699-9.7832 1.6305 72.83h-22.284l3.2611-73.374z"
+          style="fill:url(#mapleLeafGradientShared)"
+        />
+      </g>
+    </defs>
+  </svg>
 
-    <!-- Screen 1: Dedicated Main Menu -->
-    <section id="screen-menu" class="screen screen-active" aria-label="Main Menu">
-      <header class="menu-header">
-        <div class="brand-badge">
-          <svg class="icon-stone-badge" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-            <ellipse cx="16" cy="19" rx="13" ry="8" fill="#4a5568" stroke="#102f4a" stroke-width="1.5"/>
-            <ellipse cx="16" cy="18" rx="10" ry="5.5" fill="#718096"/>
-            <path d="M12 17.5 C12 11.5, 20 11.5, 20 17.5" fill="none" stroke="#d63b3b" stroke-width="2.5" stroke-linecap="round"/>
-            <path d="M15.5 12 L19.5 12" stroke="#f0c647" stroke-width="2.5" stroke-linecap="round"/>
-          </svg>
-          <span class="brand-text">CURLING PUZZLES</span>
+  <div class="app">
+    <div id="toast" class="toast hidden" role="status" aria-live="polite"></div>
+
+    <!-- Application Top Bar: Championship Scoreboard Header -->
+    <header class="app-header">
+      <div class="brand-cluster">
+        <svg class="header-leaf-icon" viewBox="0 0 298.72 341.12" aria-hidden="true" focusable="false">
+          <use href="#authoritative-maple-leaf" />
+        </svg>
+        <div class="brand-title-wrap">
+          <span class="header-sub-badge">Canadian Championship</span>
+          <h1 class="brand-title">Connections</h1>
         </div>
-        <h1 class="game-title">Connections</h1>
-        <p class="game-subtitle">Group four curling items that share a common link.</p>
-      </header>
-
-      <main class="menu-body">
-        <!-- Hero Today Card -->
-        <article class="hero-today-card glass-panel-hero">
-          <div class="card-accent-trim" aria-hidden="true"></div>
-          <div class="today-card-meta">
-            <span class="pill-badge" id="today-day-label">Today</span>
-            <span class="today-status" id="today-status-text">Unplayed</span>
-          </div>
-          <div class="today-card-info">
-            <h2 class="today-puzzle-heading" id="today-puzzle-title">Daily Match</h2>
-            <p class="today-puzzle-desc">Find 4 groups of 4 related curling terms.</p>
-          </div>
-          <button id="btn-play-today" class="btn-primary btn-action-large" type="button">
-            <span class="btn-text" id="btn-play-today-text">Play</span>
-            <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-              <polygon points="5 3 19 12 5 21 5 3"/>
-            </svg>
-          </button>
-        </article>
-
-        <!-- Navigation Stack -->
-        <div class="menu-action-stack">
-          <!-- Vault Action -->
-          <button id="btn-open-vault" class="btn-secondary glass-panel-secondary" type="button">
-            <div class="btn-inner-content">
-              <svg class="menu-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                <rect x="3" y="4" width="18" height="16" rx="2"/>
-                <circle cx="12" cy="12" r="3"/>
-                <path d="M12 7 v2 M12 15 v2 M7 12 h2 M15 12 h2"/>
-              </svg>
-              <div class="btn-label-block">
-                <span class="btn-main-label">Vault</span>
-                <span class="btn-sub-label" id="vault-count-label">Released Archives</span>
-              </div>
-            </div>
-            <span class="nav-chevron" aria-hidden="true">›</span>
-          </button>
-
-          <!-- Universal Home Link -->
-          <a id="btn-home-link" href="https://tileworksgamesstudio.github.io/Curling-Menu/" class="btn-secondary glass-panel-secondary" aria-label="Curling Menu Home">
-            <div class="btn-inner-content">
-              <svg class="menu-row-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-                <polyline points="9 22 9 12 15 12 15 22"/>
-              </svg>
-              <div class="btn-label-block">
-                <span class="btn-main-label">Home</span>
-                <span class="btn-sub-label">All Curling Games</span>
-              </div>
-            </div>
-            <span class="nav-chevron" aria-hidden="true">›</span>
-          </a>
-
-          <!-- Controls Strip: Sound, Help & Stats -->
-          <div class="menu-controls-strip">
-            <button id="btn-toggle-sound" class="btn-utility glass-frosted" type="button" aria-pressed="true" aria-label="Toggle Sound">
-              <svg class="sound-icon-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-                <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
-              </svg>
-              <svg class="sound-icon-off sound-icon-hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-                <line x1="23" y1="9" x2="17" y2="15"/>
-                <line x1="17" y1="9" x2="23" y2="15"/>
-              </svg>
-              <span id="sound-state-text">Sound: ON</span>
-            </button>
-
-            <button id="btn-open-help" class="btn-utility glass-frosted" type="button" aria-label="How to play">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                <circle cx="12" cy="12" r="10"/>
-                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-                <line x1="12" y1="17" x2="12.01" y2="17"/>
-              </svg>
-              <span>How to Play</span>
-            </button>
-
-            <button id="btn-open-stats" class="btn-utility glass-frosted" type="button" aria-label="Player Statistics">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-                <path d="M18 20V10M12 20V4M6 20v-6"/>
-              </svg>
-              <span>Stats</span>
-            </button>
-          </div>
-        </div>
-      </main>
-
-      <footer class="menu-footer">
-        <span class="subtle-credit">Canadian Winter Inspired • Precision Ice</span>
-      </footer>
-    </section>
-
-    <!-- Screen 2: Active Puzzle Game Screen -->
-    <section id="screen-game" class="screen" aria-label="Active Game Board">
-      <header class="game-top-bar glass-panel-secondary">
-        <button id="btn-game-back" class="btn-icon-nav" type="button" aria-label="Back to main menu">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
+      </div>
+      <nav class="app-nav" aria-label="Game utilities">
+        <button id="btn-sound-toggle" class="nav-btn sound-toggle" type="button" aria-label="Toggle UI Audio">
+          <span class="sound-icon" aria-hidden="true">🔊</span>
         </button>
-        <div class="game-top-title-wrap">
-          <span class="game-top-meta" id="game-date-badge">Today</span>
-          <h2 class="game-top-title" id="game-title-text">Curling Connections</h2>
-        </div>
-        <div class="game-top-actions">
-          <button id="btn-game-help" class="btn-icon-nav" type="button" aria-label="Game Instructions">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-              <circle cx="12" cy="12" r="10"/>
-              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
-              <line x1="12" y1="17" x2="12.01" y2="17"/>
-            </svg>
-          </button>
-        </div>
-      </header>
+        <button id="btn-help" class="nav-btn" type="button" aria-haspopup="dialog">How to Play</button>
+        <button id="btn-stats" class="nav-btn" type="button" aria-haspopup="dialog">Stats</button>
+      </nav>
+    </header>
 
-      <main class="game-content-wrap">
-        <p class="game-prompt">Create four groups of four related curling items.</p>
-
-        <!-- Toast Feedback Notification Strip -->
-        <div id="toast-message" class="toast-message" role="status" aria-live="polite" aria-atomic="true"></div>
-
-        <!-- Solved Category Rows -->
-        <div id="solved-groups-container" class="solved-groups-container" aria-label="Solved Groups" aria-live="polite"></div>
-
-        <!-- 4x4 Grid of 16 Association Tiles -->
-        <div id="connections-grid" class="connections-grid" role="group" aria-label="Word selection grid">
-          <!-- Dynamically populated via script.js -->
-        </div>
-
-        <!-- Mistakes Remaining Indicator Bar -->
-        <div class="mistakes-bar" role="status" aria-live="polite" aria-label="Mistakes Remaining">
-          <span class="mistakes-label" id="mistakes-text-label">Mistakes remaining:</span>
-          <div class="mistake-stones" id="mistake-stones-wrap" aria-hidden="true">
-            <span class="stone-indicator active" title="Chance 1"></span>
-            <span class="stone-indicator active" title="Chance 2"></span>
-            <span class="stone-indicator active" title="Chance 3"></span>
-            <span class="stone-indicator active" title="Chance 4"></span>
+    <main class="main-container">
+      <!-- Screen: Main Menu -->
+      <section id="screen-menu" class="screen screen-menu">
+        <div class="menu-intro">
+          <div class="curling-rink-divider">
+            <span class="line-segment"></span>
+            <span class="stone-icon-accent red-stone" aria-hidden="true"></span>
+            <span class="stone-icon-accent yellow-stone" aria-hidden="true"></span>
+            <span class="line-segment"></span>
           </div>
-          <span id="mistakes-accessible-count" class="sr-only">4 mistakes remaining</span>
+          <p class="menu-tagline">Group four related words without making four mistakes.</p>
         </div>
 
-        <!-- Gameplay Primary Actions -->
-        <div class="game-actions-bar">
-          <button id="btn-shuffle" class="btn-game-control glass-frosted" type="button">
-            <span>Shuffle</span>
+        <!-- Universal Navigation: Daily Puzzle → Vault → Home -->
+        <nav class="universal-nav" aria-label="Primary navigation">
+          <!-- 1. Daily Puzzle Destination -->
+          <div class="nav-card primary-card">
+            <div class="card-ice-sheen" aria-hidden="true"></div>
+            <div class="card-meta">
+              <span class="card-badge"><span class="badge-dot"></span> Daily Sheet</span>
+              <span id="menu-date" class="card-date">—</span>
+            </div>
+            <div class="card-body">
+              <p id="menu-status" class="card-status">Loading puzzle...</p>
+            </div>
+            <button id="btn-play-today" class="btn btn-primary btn-full stone-button red-impact" type="button">Play Daily</button>
+          </div>
+
+          <!-- 2. Vault Destination -->
+          <div class="nav-card secondary-card">
+            <div class="card-ice-sheen" aria-hidden="true"></div>
+            <div class="card-meta">
+              <h2 class="card-title">Vault</h2>
+              <span class="card-caption">Tournament Archive</span>
+            </div>
+            <p class="card-desc">Play previously released puzzles and track your progress.</p>
+            <button id="btn-open-vault" class="btn btn-secondary btn-full stone-button yellow-impact" type="button">Open Vault</button>
+          </div>
+
+          <!-- 3. Home Destination -->
+          <div class="nav-card tertiary-card">
+            <a id="btn-home" href="#home-placeholder" class="btn btn-outline btn-full text-center" aria-label="Return to Games Home">
+              Home
+            </a>
+          </div>
+        </nav>
+      </section>
+
+      <!-- Screen: Gameplay -->
+      <section id="screen-game" class="screen screen-game hidden" aria-label="Gameplay Screen">
+        <!-- Gameplay Dedicated Header -->
+        <div class="game-header">
+          <button id="btn-game-back" class="btn btn-secondary btn-sm" type="button" aria-label="Return to Menu">
+            &larr; Menu
           </button>
-          <button id="btn-deselect-all" class="btn-game-control glass-frosted" type="button" disabled>
-            <span>Deselect All</span>
+          <div class="puzzle-title-wrap">
+            <h2 id="game-puzzle-title" class="puzzle-title">Puzzle</h2>
+          </div>
+        </div>
+
+        <!-- Icons/Status ABOVE Game Board -->
+        <div class="status-zone" aria-label="Game Status">
+          <div class="mistakes-counter" aria-live="polite">
+            <span class="mistakes-label">Mistakes remaining:</span>
+            <div id="mistake-dots" class="mistake-dots" aria-label="4 attempts remaining">
+              <span class="dot filled" aria-hidden="true"></span>
+              <span class="dot filled" aria-hidden="true"></span>
+              <span class="dot filled" aria-hidden="true"></span>
+              <span class="dot filled" aria-hidden="true"></span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Game Board IN THE CENTER -->
+        <div class="board-container">
+          <div id="solved-stack" class="solved-stack" aria-live="polite"></div>
+          <div id="grid" class="grid" role="group" aria-label="4 by 4 word puzzle grid"></div>
+        </div>
+
+        <!-- Supporting Text & Controls BELOW Game Board -->
+        <div class="supporting-zone">
+          <p class="gameplay-prompt">Select four items and press Submit.</p>
+          <div class="controls-row">
+            <button id="btn-shuffle" class="btn btn-secondary" type="button">Shuffle</button>
+            <button id="btn-deselect" class="btn btn-secondary" type="button" disabled>Deselect All</button>
+            <button id="btn-submit" class="btn btn-primary stone-button red-impact" type="button" disabled>Submit</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Screen: Vault (Historical Archive) -->
+      <section id="screen-vault" class="screen screen-vault hidden" aria-label="Vault Archive Screen">
+        <div class="game-header">
+          <button id="btn-vault-back" class="btn btn-secondary btn-sm" type="button" aria-label="Return to Menu">
+            &larr; Menu
           </button>
-          <button id="btn-submit" class="btn-game-control btn-submit" type="button" disabled>
-            <span>Submit</span>
-          </button>
+          <div class="puzzle-title-wrap">
+            <h2 class="puzzle-title">The Vault</h2>
+          </div>
         </div>
-      </main>
-    </section>
+        <p class="vault-lead">Archive of previous puzzles. Select any puzzle to play.</p>
+        <div id="vault-list" class="vault-list" role="list"></div>
+      </section>
+    </main>
 
-    <!-- Screen 3: Scalable Vault Archive Screen -->
-    <section id="screen-vault" class="screen" aria-label="Vault Archive">
-      <header class="game-top-bar glass-panel-secondary">
-        <button id="btn-vault-back" class="btn-icon-nav" type="button" aria-label="Back to main menu">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">
-            <polyline points="15 18 9 12 15 6"/>
-          </svg>
-        </button>
-        <div class="game-top-title-wrap">
-          <span class="game-top-meta">Archive</span>
-          <h2 class="game-top-title">Puzzle Vault</h2>
-        </div>
-        <div style="width: 40px;" aria-hidden="true"></div>
-      </header>
-
-      <main class="vault-content-wrap">
-        <div class="vault-info-banner glass-frosted">
-          <p>Replay released daily puzzles. Vault archives your historical progress.</p>
-        </div>
-        <div id="vault-list" class="vault-list" role="list">
-          <!-- Released archive items injected deterministically -->
-        </div>
-      </main>
-    </section>
-
-    <!-- Modal 1: How to Play -->
-    <div id="modal-help" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="help-title" hidden>
-      <div class="modal-card glass-panel-hero">
+    <!-- Modal: How to Play -->
+    <div id="modal-help" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="help-title">
+      <div class="modal-card">
         <div class="modal-header">
-          <h3 id="help-title" class="modal-title">How to Play</h3>
-          <button id="btn-close-help" class="btn-icon-nav" type="button" aria-label="Close instructions">✕</button>
+          <div class="modal-header-title">
+            <svg class="modal-leaf-icon" viewBox="0 0 298.72 341.12" aria-hidden="true" focusable="false">
+              <use href="#authoritative-maple-leaf" />
+            </svg>
+            <h2 id="help-title">How to Play</h2>
+          </div>
+          <button class="btn-close" data-close="modal-help" type="button" aria-label="Close dialog">&times;</button>
         </div>
         <div class="modal-body">
-          <p>Find groups of four items that share something in common in curling.</p>
+          <p>Find four groups of four items that share a common connection.</p>
           <ul class="help-list">
-            <li>Select four items and tap <strong>Submit</strong> to check your guess.</li>
-            <li>Category groups range in difficulty, styled after curling ring tiers:</li>
+            <li>Select four items and press <strong>Submit</strong> to test your guess.</li>
+            <li>Solve all four groups before making 4 mistakes.</li>
+            <li>Each puzzle has exactly one unique solution.</li>
           </ul>
+          <h3 class="category-heading">Category Difficulties</h3>
           <div class="category-legend">
-            <div class="legend-row tier-1">
-              <span class="legend-badge">Straightforward</span>
-              <span class="legend-desc">Fundamental curling terms & gear</span>
-            </div>
-            <div class="legend-row tier-2">
-              <span class="legend-badge">Medium</span>
-              <span class="legend-desc">Tactics, mechanics & rink features</span>
-            </div>
-            <div class="legend-row tier-3">
-              <span class="legend-badge">Hard</span>
-              <span class="legend-desc">Curling history, Canadian lore & legends</span>
-            </div>
-            <div class="legend-row tier-4">
-              <span class="legend-badge">Tricky</span>
-              <span class="legend-desc">Wordplay, subtleties & double meanings</span>
-            </div>
+            <div class="legend-row"><span class="swatch cat-1" aria-hidden="true"></span> <span>Level 1 &mdash; Straightforward (Yellow Stone)</span></div>
+            <div class="legend-row"><span class="swatch cat-2" aria-hidden="true"></span> <span>Level 2 &mdash; Moderate (Ice Sheet Green)</span></div>
+            <div class="legend-row"><span class="swatch cat-3" aria-hidden="true"></span> <span>Level 3 &mdash; Difficult (House Ring Blue)</span></div>
+            <div class="legend-row"><span class="swatch cat-4" aria-hidden="true"></span> <span>Level 4 &mdash; Tricky (Championship Red)</span></div>
           </div>
-          <p class="help-note">Four mistakes end the daily attempt, but you can always review the solved board.</p>
-        </div>
-        <div class="modal-footer">
-          <button id="btn-dismiss-help" class="btn-primary" type="button">Got It</button>
         </div>
       </div>
     </div>
 
-    <!-- Modal 2: Player Statistics -->
-    <div id="modal-stats" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="stats-title" hidden>
-      <div class="modal-card glass-panel-hero">
+    <!-- Modal: Statistics -->
+    <div id="modal-stats" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="stats-title">
+      <div class="modal-card">
         <div class="modal-header">
-          <h3 id="stats-title" class="modal-title">Statistics</h3>
-          <button id="btn-close-stats" class="btn-icon-nav" type="button" aria-label="Close statistics">✕</button>
+          <div class="modal-header-title">
+            <svg class="modal-leaf-icon" viewBox="0 0 298.72 341.12" aria-hidden="true" focusable="false">
+              <use href="#authoritative-maple-leaf" />
+            </svg>
+            <h2 id="stats-title">Statistics</h2>
+          </div>
+          <button class="btn-close" data-close="modal-stats" type="button" aria-label="Close dialog">&times;</button>
         </div>
         <div class="modal-body">
           <div class="stats-grid">
-            <div class="stat-box glass-frosted">
-              <span class="stat-val" id="stat-played">0</span>
-              <span class="stat-lbl">Played</span>
-            </div>
-            <div class="stat-box glass-frosted">
-              <span class="stat-val" id="stat-win-rate">0%</span>
-              <span class="stat-lbl">Win Rate</span>
-            </div>
-            <div class="stat-box glass-frosted">
-              <span class="stat-val" id="stat-current-streak">0</span>
-              <span class="stat-lbl">Current Streak</span>
-            </div>
-            <div class="stat-box glass-frosted">
-              <span class="stat-val" id="stat-max-streak">0</span>
-              <span class="stat-lbl">Best Streak</span>
-            </div>
+            <div class="stat-cell"><span id="stat-played" class="stat-number">0</span><span class="stat-label">Played</span></div>
+            <div class="stat-cell"><span id="stat-win-pct" class="stat-number">0%</span><span class="stat-label">Win %</span></div>
+            <div class="stat-cell"><span id="stat-streak" class="stat-number">0</span><span class="stat-label">Current Streak</span></div>
+            <div class="stat-cell"><span id="stat-max-streak" class="stat-number">0</span><span class="stat-label">Max Streak</span></div>
           </div>
-        </div>
-        <div class="modal-footer">
-          <button id="btn-dismiss-stats" class="btn-primary" type="button">Close</button>
         </div>
       </div>
     </div>
 
-    <!-- Modal 3: Game Results / Completion -->
-    <div id="modal-result" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="result-title" hidden>
-      <div class="modal-card glass-panel-hero result-card">
+    <!-- Modal: Result -->
+    <div id="modal-result" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="result-title">
+      <div class="modal-card text-center">
         <div class="modal-header">
-          <h3 id="result-title" class="modal-title">End of Game</h3>
-          <button id="btn-close-result" class="btn-icon-nav" type="button" aria-label="Close results">✕</button>
+          <div class="modal-header-title text-center" style="width: 100%;">
+            <svg class="modal-leaf-icon" viewBox="0 0 298.72 341.12" aria-hidden="true" focusable="false">
+              <use href="#authoritative-maple-leaf" />
+            </svg>
+            <h2 id="result-title">Results</h2>
+          </div>
+          <button class="btn-close" data-close="modal-result" type="button" aria-label="Close dialog">&times;</button>
         </div>
         <div class="modal-body">
-          <p id="result-outcome-msg" class="result-outcome-msg">Great shot!</p>
-          <div id="result-emoji-grid" class="result-emoji-grid" aria-label="Result visual breakdown"></div>
-          <div class="result-summary-stats">
-            <span id="result-mistakes-used">Mistakes used: 0</span>
+          <p id="result-msg" class="result-headline"></p>
+          <div id="result-grid" class="result-grid" aria-label="Guess result emoji grid"></div>
+          <div class="result-actions">
+            <button id="btn-share" class="btn btn-primary btn-full stone-button red-impact" type="button">Share Results</button>
+            <button id="btn-result-menu" class="btn btn-secondary btn-full" type="button">Back to Menu</button>
           </div>
-        </div>
-        <div class="modal-footer result-footer">
-          <button id="btn-share-result" class="btn-primary" type="button">
-            <span>Share Result</span>
-          </button>
-          <button id="btn-result-menu" class="btn-secondary glass-frosted" type="button">
-            <span>Main Menu</span>
-          </button>
         </div>
       </div>
     </div>
-
   </div>
 
-  <script src="puzzles.js"></script>
   <script src="script.js"></script>
 </body>
 </html>

@@ -1,1050 +1,1240 @@
 /* ==========================================================================
-   CURLING PUZZLES — CONNECTIONS
-   Master Style System: Premium Curling Ice + Dark Blue Structural Ink
-   Composition: ~65% Light Ice, ~25% Dark Blue Structure, ~10% Red/Yellow Accents
+   ADVANCED LIGHT NEO-BRUTALIST CANADIAN CURLING SYSTEM
    ========================================================================== */
 
 :root {
-  /* --- 1. ICE COLOR FOUNDATION --- */
-  --ice-base: #f4fafe;
-  --ice-surface: #edf6fb;
-  --ice-ambient: #e2eff7;
-  --ice-highlight: #ffffff;
-  --ice-cold-rim: #d6e8f5;
+  /* Ice Palette Foundation (~65%) */
+  --ice-bg-base:        #F8FCFF;
+  --ice-bg-subtle:      #F0F8FD;
+  --ice-bg-mid:         #E3F2FB;
+  --ice-bg-accent:      #D4EBFA;
+  --ice-white:          #FFFFFF;
+  --ice-reflection:     rgba(255, 255, 255, 0.85);
 
-  /* --- 2. DARK BLUE STRUCTURAL INK --- */
-  --ink-primary: #102f4a;       /* Deepest structural text & high-contrast outlines */
-  --ink-secondary: #153b5d;     /* Primary rink guide & control ink */
-  --ink-mid: #1e4c70;           /* Supporting structural frames & active states */
-  --ink-muted: #3a5d7c;         /* Subtitles & metadata */
-  --ink-subtle: #6b86a0;        /* Subtle accents & borders */
+  /* Very Dark Blue Structure & Ice Markings (~15%) */
+  --ice-navy-deep:      #061524; /* Primary structural contrast & text */
+  --ice-navy-marking:   #0B2138; /* Markings, house outlines */
+  --ice-navy-mid:       #1E3B5C; /* Secondary borders, lines */
+  --ice-navy-subtle:    #3A5B80; /* Tertiary text, inactive */
+  --ice-marking-line:   rgba(11, 33, 56, 0.18);
 
-  /* --- 3. CURLING ACCENT PALETTE (TEAMS & RINGS) --- */
-  --team-red: #d63b3b;
-  --team-red-deep: #b92e34;
-  --team-red-light: #fee2e2;
-  --team-yellow: #f0c647;
-  --team-yellow-deep: #d8aa32;
-  --team-yellow-light: #fef3c7;
+  /* Canadian Red & Stone Accents (~15%) */
+  --canadian-red:       #D71920; /* Authentic Canadian Red */
+  --stone-red:          #FF2B30; /* Vivid red stone equipment */
+  --stone-red-glow:     rgba(215, 25, 32, 0.28);
+  --canadian-red-dark:  #B01016;
 
-  /* Tier Category Colors (Curling Rings & Scottish Granite) */
-  --tier-1-bg: #fffbeb;
-  --tier-1-border: #f0c647;
-  --tier-1-text: #78350f;
-  --tier-1-badge: #d97706;
+  /* Stone Yellow Accents (~5%) */
+  --stone-yellow:       #FFC400; /* Vivid yellow stone equipment */
+  --stone-yellow-bright:#FFD83D;
+  --stone-yellow-glow:  rgba(255, 196, 0, 0.35);
 
-  --tier-2-bg: #eff6ff;
-  --tier-2-border: #3b82f6;
-  --tier-2-text: #1e3a8a;
-  --tier-2-badge: #2563eb;
+  /* Connections Category Levels: Curated Curling Ring Palette */
+  --cat-1: #FFD230; /* Level 1: Straightforward (Yellow Stone) */
+  --cat-2: #2E9C68; /* Level 2: Moderate (Ice Sheet Teal/Green) */
+  --cat-3: #1868B7; /* Level 3: Difficult (House Ring Blue) */
+  --cat-4: #D71920; /* Level 4: Tricky (Canadian Championship Red) */
 
-  --tier-3-bg: #fef2f2;
-  --tier-3-border: #ef4444;
-  --tier-3-text: #7f1d1d;
-  --tier-3-badge: #dc2626;
+  /* Neo-Brutalist Geometry */
+  --border-thick:   2.5px solid var(--ice-navy-deep);
+  --border-subtle:  1.5px solid var(--ice-navy-marking);
+  --border-ice:     1px solid rgba(11, 33, 56, 0.15);
+  --radius-sm:      4px;
+  --radius-md:      8px;
+  --radius-lg:      12px;
 
-  --tier-4-bg: #f5f3ff;
-  --tier-4-border: #8b5cf6;
-  --tier-4-text: #4c1d95;
-  --tier-4-badge: #7c3aed;
+  /* Layered Advanced Neo-Brutalist Shadows */
+  --shadow-normal:   3px 3px 0px var(--ice-navy-deep), 0 4px 12px rgba(6, 21, 36, 0.06);
+  --shadow-active:   1px 1px 0px var(--ice-navy-deep);
+  --shadow-elevated: 5px 5px 0px var(--ice-navy-deep), 0 10px 24px rgba(6, 21, 36, 0.12);
+  --shadow-red:      3px 3px 0px var(--canadian-red), 0 4px 14px var(--stone-red-glow);
+  --shadow-yellow:   3px 3px 0px #C79800, 0 4px 14px var(--stone-yellow-glow);
 
-  /* --- 4. LIQUID ICE-GLASS MATERIAL STACK --- */
-  --glass-hero-bg: linear-gradient(135deg, rgba(255, 255, 255, 0.90) 0%, rgba(238, 247, 253, 0.82) 100%);
-  --glass-hero-border: 1.5px solid rgba(21, 59, 93, 0.18);
-  --glass-hero-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.95), 0 12px 30px -4px rgba(16, 47, 74, 0.11), 0 2px 6px rgba(16, 47, 74, 0.04);
+  /* Editorial Sports Typography */
+  --font-display: 'Cinzel', -apple-system, BlinkMacSystemFont, "Segoe UI", serif;
+  --font-ui:      'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 
-  --glass-secondary-bg: linear-gradient(145deg, rgba(255, 255, 255, 0.85) 0%, rgba(235, 245, 252, 0.76) 100%);
-  --glass-secondary-border: 1.5px solid rgba(21, 59, 93, 0.15);
-  --glass-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.9), 0 6px 20px -4px rgba(16, 47, 74, 0.08);
-
-  --glass-frosted-bg: rgba(255, 255, 255, 0.70);
-  --glass-frosted-border: 1.5px solid rgba(21, 59, 93, 0.14);
-
-  /* --- 5. NEO-BRUTALIST TOKENS --- */
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 20px;
-  --radius-full: 9999px;
-
-  /* Spacing Scale */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-
-  --font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  --transition-fast: 0.15s cubic-bezier(0.2, 0.8, 0.2, 1);
+  /* Micro-Motion Timings */
+  --t-snap: 0.09s cubic-bezier(0.2, 0.8, 0.2, 1);
+  --t-settle: 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+  --t-glide: 0.45s cubic-bezier(0.25, 1, 0.5, 1);
 }
-
-/* ==========================================================================
-   RESET & FOUNDATION
-   ========================================================================== */
 
 *, *::before, *::after {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  -webkit-tap-highlight-color: transparent;
 }
 
-html, body {
-  width: 100%;
-  height: 100%;
-  min-height: 100vh;
-  min-height: 100dvh;
-  background-color: var(--ice-base);
-  background-image: 
-    radial-gradient(ellipse at 50% 15%, rgba(255, 255, 255, 0.85) 0%, transparent 65%),
-    linear-gradient(180deg, var(--ice-surface) 0%, var(--ice-base) 45%, var(--ice-ambient) 100%);
-  font-family: var(--font-family);
-  color: var(--ink-primary);
-  overflow-x: hidden;
-  line-height: 1.4;
+html {
+  background-color: var(--ice-bg-base);
+  color: var(--ice-navy-deep);
+  font-family: var(--font-ui);
+  -webkit-text-size-adjust: 100%;
   -webkit-font-smoothing: antialiased;
 }
 
-body.modal-open {
-  overflow: hidden;
-}
-
-/* Touch responsiveness hardening */
-button,
-.word-tile,
-.btn-primary,
-.btn-secondary,
-.btn-game-control,
-.btn-utility,
-.btn-icon-nav,
-.stone-indicator,
-.vault-card {
-  touch-action: manipulation;
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-}
-
-/* Screen reader only utility */
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  padding: 0;
-  margin: -1px;
-  overflow: hidden;
-  clip: rect(0, 0, 0, 0);
-  white-space: nowrap;
-  border: 0;
-}
-
-/* ==========================================================================
-   AMBIENT COLLISION CANVAS BACKGROUND
-   ========================================================================== */
-
-#curling-bg-canvas {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* ==========================================================================
-   APPLICATION SHELL
-   ========================================================================== */
-
-.app-shell {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: 520px;
+body {
   min-height: 100vh;
   min-height: 100dvh;
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  padding-top: max(var(--space-2), env(safe-area-inset-top));
-  padding-right: max(var(--space-4), env(safe-area-inset-right));
-  padding-bottom: max(var(--space-4), env(safe-area-inset-bottom));
-  padding-left: max(var(--space-4), env(safe-area-inset-left));
-}
-
-/* Screen Transitions */
-.screen {
-  display: none;
-  width: 100%;
-  flex: 1;
-  flex-direction: column;
-  padding: var(--space-4) 0;
-  opacity: 0;
-  transform: translateY(4px);
-  transition: opacity 0.22s ease, transform 0.22s ease;
-}
-
-.screen-active {
-  display: flex;
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* ==========================================================================
-   LIQUID ICE-GLASS MATERIAL STACKS
-   ========================================================================== */
-
-.glass-panel-hero {
-  background: var(--glass-hero-bg);
-  border: var(--glass-hero-border);
-  box-shadow: var(--glass-hero-shadow);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  border-radius: var(--radius-xl);
-}
-
-.glass-panel-secondary {
-  background: var(--glass-secondary-bg);
-  border: var(--glass-secondary-border);
-  box-shadow: var(--glass-shadow);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border-radius: var(--radius-lg);
-}
-
-.glass-frosted {
-  background: var(--glass-frosted-bg);
-  border: var(--glass-frosted-border);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-radius: var(--radius-md);
-}
-
-/* ==========================================================================
-   MAIN MENU SCREEN
-   ========================================================================== */
-
-.menu-header {
-  padding: var(--space-2) 0 var(--space-4);
-  text-align: center;
-}
-
-.brand-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  background: rgba(255, 255, 255, 0.88);
-  border: 1.5px solid rgba(21, 59, 93, 0.2);
-  padding: 4px 14px;
-  border-radius: var(--radius-full);
-  margin-bottom: var(--space-2);
-  box-shadow: 0 2px 6px rgba(16, 47, 74, 0.05);
-}
-
-.icon-stone-badge {
-  width: 20px;
-  height: 20px;
-  vertical-align: middle;
-}
-
-.brand-text {
-  font-size: 0.76rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  color: var(--ink-secondary);
-  text-transform: uppercase;
-}
-
-.game-title {
-  font-size: clamp(2rem, 6.5vw, 2.6rem);
-  font-weight: 900;
-  letter-spacing: -0.03em;
-  color: var(--ink-primary);
-  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.9);
-}
-
-.game-subtitle {
-  font-size: 0.92rem;
-  color: var(--ink-muted);
-  max-width: 320px;
-  margin: var(--space-1) auto 0;
-  font-weight: 500;
-}
-
-.menu-body {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  justify-content: center;
-}
-
-/* Hero Today Card */
-.hero-today-card {
   position: relative;
-  overflow: hidden;
-  padding: var(--space-5);
   display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-  border-top: 2px solid rgba(255, 255, 255, 0.95);
-}
-
-.card-accent-trim {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 4px;
-  background: linear-gradient(90deg, var(--ink-secondary) 0%, var(--team-red) 50%, var(--team-yellow) 100%);
-}
-
-.today-card-meta {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.pill-badge {
-  background: var(--ink-secondary);
-  color: #ffffff;
-  font-size: 0.74rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  padding: 4px 12px;
-  border-radius: var(--radius-full);
-}
-
-.today-status {
-  font-size: 0.82rem;
-  font-weight: 700;
-  color: var(--ink-muted);
-}
-
-.today-puzzle-heading {
-  font-size: 1.45rem;
-  font-weight: 900;
-  color: var(--ink-primary);
-}
-
-.today-puzzle-desc {
-  font-size: 0.88rem;
-  color: var(--ink-muted);
-  font-weight: 500;
-}
-
-/* Primary Action Buttons */
-.btn-primary {
-  width: 100%;
-  min-height: 48px;
-  background: linear-gradient(180deg, var(--ink-secondary) 0%, var(--ink-primary) 100%);
-  color: #ffffff;
-  border: 1.5px solid var(--ink-primary);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 4px 12px rgba(16, 47, 74, 0.2);
-  border-radius: var(--radius-md);
-  font-size: 1.02rem;
-  font-weight: 800;
-  letter-spacing: 0.02em;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  transition: transform var(--transition-fast), filter var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.btn-primary:active {
-  transform: translateY(2px);
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.35);
-}
-
-.btn-primary:focus-visible {
-  outline: 3px solid var(--ink-secondary);
-  outline-offset: 2px;
-}
-
-.btn-icon {
-  width: 18px;
-  height: 18px;
-}
-
-/* Secondary Actions */
-.menu-action-stack {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.btn-secondary {
-  width: 100%;
-  min-height: 52px;
-  padding: var(--space-3) var(--space-4);
-  color: var(--ink-primary);
-  text-decoration: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  transition: transform var(--transition-fast), background var(--transition-fast);
-}
-
-.btn-secondary:active {
-  transform: translateY(1.5px);
-}
-
-.btn-secondary:focus-visible {
-  outline: 3px solid var(--ink-secondary);
-  outline-offset: 2px;
-}
-
-.btn-inner-content {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-}
-
-.menu-row-icon {
-  width: 22px;
-  height: 22px;
-  color: var(--ink-secondary);
-  flex-shrink: 0;
-}
-
-.btn-label-block {
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-}
-
-.btn-main-label {
-  font-size: 0.98rem;
-  font-weight: 800;
-  color: var(--ink-primary);
-}
-
-.btn-sub-label {
-  font-size: 0.78rem;
-  color: var(--ink-muted);
-  font-weight: 500;
-}
-
-.nav-chevron {
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: var(--ink-subtle);
-}
-
-/* Menu Controls Strip */
-.menu-controls-strip {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: var(--space-2);
-  margin-top: var(--space-1);
-}
-
-.btn-utility {
-  min-height: 44px;
-  padding: 8px 6px;
-  color: var(--ink-primary);
-  font-size: 0.78rem;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  transition: background var(--transition-fast), transform var(--transition-fast);
-}
-
-.btn-utility svg {
-  width: 18px;
-  height: 18px;
-  color: var(--ink-secondary);
-}
-
-.btn-utility:active {
-  transform: translateY(1px);
-}
-
-.btn-utility:focus-visible {
-  outline: 2px solid var(--ink-secondary);
-}
-
-.sound-icon-hidden {
-  display: none;
-}
-
-.menu-footer {
-  text-align: center;
-  padding: var(--space-3) 0 var(--space-1);
-}
-
-.subtle-credit {
-  font-size: 0.74rem;
-  color: var(--ink-subtle);
-  letter-spacing: 0.04em;
-  font-weight: 600;
+  align-items: stretch;
+  background: radial-gradient(circle at 50% 20%, #FFFFFF 0%, var(--ice-bg-base) 60%, var(--ice-bg-mid) 100%);
+  padding: env(safe-area-inset-top, 12px) env(safe-area-inset-right, 12px) env(safe-area-inset-bottom, 14px) env(safe-area-inset-left, 12px);
+  padding-top: max(14px, env(safe-area-inset-top));
+  padding-bottom: max(18px, env(safe-area-inset-bottom));
+  overflow-x: hidden;
 }
 
 /* ==========================================================================
-   ACTIVE GAME SCREEN
+   AMBIENT ICE BACKGROUND & CURLING MOTIFS LAYER
    ========================================================================== */
 
-.game-top-bar {
-  min-height: 52px;
-  padding: var(--space-2) var(--space-3);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: var(--space-3);
-}
-
-.btn-icon-nav {
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-md);
-  border: 1.5px solid rgba(21, 59, 93, 0.18);
-  background: rgba(255, 255, 255, 0.85);
-  color: var(--ink-primary);
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: background var(--transition-fast), transform var(--transition-fast);
-}
-
-.btn-icon-nav svg {
-  width: 20px;
-  height: 20px;
-}
-
-.btn-icon-nav:active {
-  transform: scale(0.95);
-}
-
-.btn-icon-nav:focus-visible {
-  outline: 2px solid var(--ink-secondary);
-}
-
-.game-top-title-wrap {
-  text-align: center;
-}
-
-.game-top-meta {
-  font-size: 0.72rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ink-muted);
-}
-
-.game-top-title {
-  font-size: 1.05rem;
-  font-weight: 900;
-  color: var(--ink-primary);
-}
-
-.game-content-wrap {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.game-prompt {
-  text-align: center;
-  font-size: 0.9rem;
-  color: var(--ink-muted);
-  font-weight: 600;
-}
-
-/* Toast Message */
-.toast-message {
-  min-height: 32px;
-  padding: 6px 16px;
-  border-radius: var(--radius-full);
-  background: var(--ink-primary);
-  border: 1.5px solid var(--ink-secondary);
-  color: #ffffff;
-  font-size: 0.84rem;
-  font-weight: 800;
-  text-align: center;
-  align-self: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  opacity: 0;
-  transform: translateY(-4px);
-  transition: opacity 0.2s ease, transform 0.2s ease;
+.ice-atmosphere {
+  position: fixed;
+  inset: 0;
   pointer-events: none;
-  box-shadow: 0 4px 12px rgba(16, 47, 74, 0.2);
+  z-index: 0;
+  overflow: hidden;
 }
 
-.toast-message.toast-visible {
-  opacity: 1;
-  transform: translateY(0);
+/* Peripheral rink vignette */
+.ice-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 40%, rgba(255, 255, 255, 0) 50%, rgba(210, 234, 248, 0.35) 85%, rgba(184, 218, 238, 0.6) 100%);
 }
 
-/* Solved Category Containers */
-.solved-groups-container {
+/* Ice surface pebbling texture pattern */
+.ice-pebble-texture {
+  position: absolute;
+  inset: 0;
+  opacity: 0.35;
+  background-image:
+    radial-gradient(circle at 10% 20%, rgba(11, 33, 56, 0.035) 1px, transparent 1px),
+    radial-gradient(circle at 70% 60%, rgba(215, 25, 32, 0.02) 1.5px, transparent 1.5px),
+    radial-gradient(circle at 40% 80%, rgba(255, 196, 0, 0.02) 1.5px, transparent 1.5px);
+  background-size: 32px 32px, 48px 48px, 64px 64px;
+}
+
+/* Painted rink ice line markings */
+.ice-lines-canvas {
+  position: absolute;
+  inset: 0;
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  justify-content: space-between;
+  opacity: 0.6;
 }
 
-.solved-group-row {
-  padding: var(--space-3) var(--space-4);
-  border-radius: var(--radius-md);
-  text-align: center;
-  animation: solvePop 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
-  box-shadow: 0 2px 8px rgba(16, 47, 74, 0.08);
-  border-width: 1.5px;
-  border-style: solid;
-}
-
-.solved-group-row.tier-1 {
-  background-color: var(--tier-1-bg);
-  border-color: var(--tier-1-border);
-  color: var(--tier-1-text);
-}
-
-.solved-group-row.tier-2 {
-  background-color: var(--tier-2-bg);
-  border-color: var(--tier-2-border);
-  color: var(--tier-2-text);
-}
-
-.solved-group-row.tier-3 {
-  background-color: var(--tier-3-bg);
-  border-color: var(--tier-3-border);
-  color: var(--tier-3-text);
-}
-
-.solved-group-row.tier-4 {
-  background-color: var(--tier-4-bg);
-  border-color: var(--tier-4-border);
-  color: var(--tier-4-text);
-}
-
-.solved-group-name {
-  font-size: 0.92rem;
-  font-weight: 900;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-.solved-group-words {
-  font-size: 0.84rem;
-  font-weight: 700;
-  opacity: 0.95;
-  margin-top: 2px;
-}
-
-@keyframes solvePop {
-  0% { transform: scale(0.94); opacity: 0; }
-  100% { transform: scale(1); opacity: 1; }
-}
-
-/* Connections Grid */
-.connections-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-2);
+.ice-marking {
   width: 100%;
+  height: 2px;
 }
 
-.word-tile {
-  min-height: 64px;
-  padding: var(--space-2) 4px;
-  background: rgba(255, 255, 255, 0.92);
-  border: 1.5px solid rgba(21, 59, 93, 0.22);
-  border-radius: var(--radius-md);
-  color: var(--ink-primary);
-  font-size: clamp(0.74rem, 2.4vw, 0.86rem);
+.hog-line-top {
+  margin-top: 5vh;
+  background: repeating-linear-gradient(90deg, var(--canadian-red) 0px, var(--canadian-red) 24px, transparent 24px, transparent 32px);
+  opacity: 0.45;
+}
+
+.tee-line {
+  background: linear-gradient(90deg, transparent 5%, var(--ice-marking-line) 20%, var(--canadian-red) 50%, var(--ice-marking-line) 80%, transparent 95%);
+  height: 2px;
+  opacity: 0.55;
+}
+
+.hog-line-bottom {
+  margin-bottom: 5vh;
+  background: repeating-linear-gradient(90deg, var(--ice-navy-mid) 0px, var(--ice-navy-mid) 28px, transparent 28px, transparent 36px);
+  opacity: 0.35;
+}
+
+/* Moving rink light reflection sweep across ice */
+.ice-light-sweep-overlay {
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(ellipse at 30% 20%, rgba(255, 255, 255, 0.45) 0%, rgba(255, 255, 255, 0) 50%);
+  animation: rinkLightDrift 38s infinite alternate ease-in-out;
+}
+
+@keyframes rinkLightDrift {
+  0%   { transform: translate(0, 0) scale(1); }
+  50%  { transform: translate(8vw, 12vh) scale(1.08); }
+  100% { transform: translate(-6vw, 4vh) scale(0.96); }
+}
+
+/* Ambient Floating Curling Icons Layer */
+.ambient-curling-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.floating-motif {
+  position: absolute;
+  bottom: -90px;
+  pointer-events: none;
+  will-change: transform, opacity;
+  animation-name: floatCurlingItem;
+  animation-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  animation-iteration-count: infinite;
+}
+
+@keyframes floatCurlingItem {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+    opacity: 0;
+  }
+  15% {
+    opacity: var(--item-opacity, 0.4);
+  }
+  85% {
+    opacity: var(--item-opacity, 0.4);
+  }
+  100% {
+    transform: translateY(-118vh) translateX(var(--drift-x, 20px)) rotate(var(--drift-rot, 35deg));
+    opacity: 0;
+  }
+}
+
+/* 3 Depth Levels for Floating Motifs */
+.motif-depth-distant {
+  filter: blur(1.5px);
+  z-index: 1;
+}
+
+.motif-depth-mid {
+  filter: blur(0.5px);
+  z-index: 2;
+}
+
+.motif-depth-near {
+  filter: drop-shadow(0 2px 6px rgba(11, 33, 56, 0.12));
+  z-index: 3;
+}
+
+.floating-motif svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* ==========================================================================
+   APPLICATION CONTAINER
+   ========================================================================== */
+
+.app {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  max-width: 530px;
+  display: flex;
+  flex-direction: column;
+  margin: 0 auto;
+}
+
+.hidden {
+  display: none !important;
+}
+
+/* ==========================================================================
+   APP HEADER: CHAMPIONSHIP BRANDING
+   ========================================================================== */
+
+.app-header {
+  position: relative;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 14px;
+  margin-bottom: 16px;
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: var(--border-thick);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-normal);
+}
+
+.brand-cluster {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-leaf-icon {
+  width: 32px;
+  height: 36px;
+  flex-shrink: 0;
+  filter: drop-shadow(1px 2px 0px rgba(6, 21, 36, 0.3));
+  transition: transform var(--t-glide);
+}
+
+.brand-cluster:hover .header-leaf-icon {
+  transform: rotate(-8deg) scale(1.08);
+}
+
+.brand-title-wrap {
+  display: flex;
+  flex-direction: column;
+}
+
+.header-sub-badge {
+  font-size: 9px;
   font-weight: 800;
   text-transform: uppercase;
-  text-align: center;
-  cursor: pointer;
+  letter-spacing: 1.2px;
+  color: var(--canadian-red);
+}
+
+.brand-title {
+  font-family: var(--font-display);
+  font-size: clamp(20px, 4.8vw, 25px);
+  font-weight: 900;
+  letter-spacing: 0.5px;
+  color: var(--ice-navy-deep);
+  line-height: 1;
+}
+
+.app-nav {
   display: flex;
   align-items: center;
-  justify-content: center;
-  word-break: break-word;
-  hyphens: auto;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 3px 6px rgba(16, 47, 74, 0.06);
-  transition: transform var(--transition-fast), background var(--transition-fast), border-color var(--transition-fast), box-shadow var(--transition-fast);
-}
-
-.word-tile:hover {
-  background: #ffffff;
-  border-color: var(--ink-secondary);
-}
-
-.word-tile:active {
-  transform: translateY(2px);
-}
-
-.word-tile.selected {
-  background: var(--ink-primary);
-  border: 2px solid var(--ink-secondary);
-  color: #ffffff;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 4px 12px rgba(16, 47, 74, 0.25);
-  transform: translateY(-2px);
-}
-
-.word-tile.shake {
-  animation: tileShake 0.4s ease;
-}
-
-@keyframes tileShake {
-  0%, 100% { transform: translateX(0); }
-  20%, 60% { transform: translateX(-5px); }
-  40%, 80% { transform: translateX(5px); }
-}
-
-/* Mistakes Counter Bar */
-.mistakes-bar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: var(--space-2);
-  margin: var(--space-2) 0;
-}
-
-.mistakes-label {
-  font-size: 0.82rem;
-  color: var(--ink-muted);
-  font-weight: 700;
-}
-
-.mistake-stones {
-  display: flex;
   gap: 8px;
 }
 
-.stone-indicator {
-  width: 16px;
-  height: 16px;
-  border-radius: 50%;
-  background: #cbd5e1;
-  border: 1.5px solid #94a3b8;
-  position: relative;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-}
-
-.stone-indicator.active {
-  background: radial-gradient(circle at 35% 35%, #ef4444, #b92e34);
-  border-color: var(--ink-primary);
-  box-shadow: 0 1px 4px rgba(185, 46, 52, 0.35);
-}
-
-.stone-indicator.active::after {
-  content: "";
-  position: absolute;
-  top: 3px;
-  left: 4px;
-  right: 4px;
-  height: 3px;
-  background: #f0c647;
-  border-radius: 2px;
-}
-
-/* Game Action Controls */
-.game-actions-bar {
-  display: flex;
-  gap: var(--space-2);
+.nav-btn {
+  background: var(--ice-white);
+  border: var(--border-subtle);
+  border-radius: var(--radius-sm);
+  color: var(--ice-navy-deep);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  font-weight: 800;
+  padding: 7px 11px;
+  cursor: pointer;
+  box-shadow: 2px 2px 0px var(--ice-navy-deep);
+  transition: transform var(--t-snap), box-shadow var(--t-snap), background-color var(--t-snap);
+  display: inline-flex;
+  align-items: center;
   justify-content: center;
 }
 
-.btn-game-control {
-  flex: 1;
-  min-height: 46px;
-  padding: var(--space-2) var(--space-3);
-  font-size: 0.88rem;
-  font-weight: 800;
-  border-radius: var(--radius-full);
-  cursor: pointer;
-  color: var(--ink-primary);
-  border: 1.5px solid rgba(21, 59, 93, 0.22);
-  background: rgba(255, 255, 255, 0.85);
-  box-shadow: 0 2px 6px rgba(16, 47, 74, 0.06);
-  transition: transform var(--transition-fast), background var(--transition-fast), opacity var(--transition-fast);
+.nav-btn:hover {
+  background: var(--ice-bg-subtle);
+  border-color: var(--canadian-red);
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px var(--canadian-red);
 }
 
-.btn-game-control:active:not(:disabled) {
-  transform: translateY(2px);
+.nav-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 0 0 0 transparent;
 }
 
-.btn-game-control:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
-.btn-game-control.btn-submit {
-  background: var(--ink-secondary);
-  border-color: var(--ink-primary);
-  color: #ffffff;
-  box-shadow: 0 3px 10px rgba(16, 47, 74, 0.2);
-}
-
-.btn-game-control.btn-submit:not(:disabled):hover {
-  background: var(--ink-primary);
+.sound-toggle {
+  padding: 7px 8px;
+  font-size: 14px;
 }
 
 /* ==========================================================================
-   VAULT ARCHIVE SCREEN
+   MAIN CONTAINERS & SCREENS
    ========================================================================== */
 
-.vault-content-wrap {
+.main-container {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
 }
 
-.vault-info-banner {
-  padding: var(--space-3);
-  font-size: 0.85rem;
-  color: var(--ink-muted);
+.screen {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  flex: 1;
+  animation: screenReveal var(--t-glide);
+}
+
+@keyframes screenReveal {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ==========================================================================
+   MAIN MENU & UNIVERSAL NAVIGATION
+   ========================================================================== */
+
+.menu-intro {
   text-align: center;
+  padding: 2px 0 6px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.curling-rink-divider {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 70%;
+  max-width: 260px;
+}
+
+.line-segment {
+  flex: 1;
+  height: 2px;
+  background: var(--ice-marking-line);
+}
+
+.stone-icon-accent {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 1.5px solid var(--ice-navy-deep);
+}
+
+.stone-icon-accent.red-stone {
+  background: var(--stone-red);
+  box-shadow: 0 0 6px var(--stone-red-glow);
+}
+
+.stone-icon-accent.yellow-stone {
+  background: var(--stone-yellow);
+  box-shadow: 0 0 6px var(--stone-yellow-glow);
+}
+
+.menu-tagline {
+  font-size: 14px;
+  color: var(--ice-navy-mid);
   font-weight: 600;
+  max-width: 90%;
+}
+
+.universal-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Nav Cards: Light Glass + Advanced Neo-Brutalist Enclosures */
+.nav-card {
+  position: relative;
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: var(--border-thick);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-normal);
+  padding: 18px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  overflow: hidden;
+  transition: transform var(--t-settle), box-shadow var(--t-settle), border-color var(--t-settle);
+}
+
+.nav-card:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-elevated);
+}
+
+/* Signature UI Effect 1: Moving Ice Light Sweep */
+.card-ice-sheen {
+  position: absolute;
+  top: 0;
+  left: -120%;
+  width: 70%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent 0%, rgba(255, 255, 255, 0.7) 50%, transparent 100%);
+  transform: skewX(-24deg);
+  pointer-events: none;
+}
+
+.nav-card:hover .card-ice-sheen {
+  animation: sheenSlide 0.95s ease-in-out;
+}
+
+@keyframes sheenSlide {
+  0%   { left: -120%; }
+  100% { left: 220%; }
+}
+
+.primary-card {
+  background: linear-gradient(170deg, #FFFFFF 0%, var(--ice-bg-subtle) 100%);
+  border-top: 4px solid var(--canadian-red);
+}
+
+.secondary-card {
+  border-top: 4px solid var(--stone-yellow);
+}
+
+.card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--ice-navy-deep);
+  color: var(--ice-white);
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  box-shadow: 1px 1px 0px rgba(0, 0, 0, 0.4);
+}
+
+.badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background-color: var(--canadian-red);
+  box-shadow: 0 0 6px var(--stone-red);
+}
+
+.card-date {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--ice-navy-subtle);
+  font-variant-numeric: tabular-nums;
+}
+
+.card-status {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--ice-navy-deep);
+}
+
+.card-title {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 900;
+  color: var(--ice-navy-deep);
+}
+
+.card-caption {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--ice-navy-subtle);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.card-desc {
+  font-size: 13.5px;
+  color: var(--ice-navy-mid);
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+.tertiary-card {
+  padding: 4px;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+/* ==========================================================================
+   GAMEPLAY SCREEN
+   ========================================================================== */
+
+.game-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 4px 10px 4px;
+  border-bottom: 2px dashed var(--ice-marking-line);
+}
+
+.puzzle-title-wrap {
+  text-align: right;
+}
+
+.puzzle-title {
+  font-family: var(--font-display);
+  font-size: clamp(16px, 4.4vw, 19px);
+  font-weight: 900;
+  color: var(--ice-navy-deep);
+}
+
+/* 1. Status Zone: Curling Stone End Attempts */
+.status-zone {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 4px 0;
+}
+
+.mistakes-counter {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.95);
+  border: var(--border-subtle);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-normal);
+}
+
+.mistakes-label {
+  font-size: 13px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--ice-navy-deep);
+}
+
+.mistake-dots {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Stylized Curling Stone Dot */
+.dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background-color: var(--ice-bg-mid);
+  border: 1.5px solid var(--ice-navy-deep);
+  position: relative;
+  transition: transform var(--t-settle), background-color var(--t-settle);
+}
+
+.dot::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 6px;
+  height: 3px;
+  border-radius: 2px;
+  background-color: rgba(6, 21, 36, 0.4);
+}
+
+.dot.filled {
+  background-color: var(--stone-red);
+  box-shadow: 0 0 6px var(--stone-red-glow);
+  transform: scale(1.05);
+}
+
+.dot.filled::after {
+  background-color: #FFFFFF;
+}
+
+/* 2. Solved Stack Banners */
+.board-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.solved-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.solved-banner {
+  position: relative;
+  border: var(--border-thick);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-normal);
+  padding: 12px 14px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  animation: bannerSlide var(--t-glide);
+  overflow: hidden;
+}
+
+@keyframes bannerSlide {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.solved-banner.cat-1 {
+  background-color: var(--cat-1);
+  color: var(--ice-navy-deep);
+}
+
+.solved-banner.cat-2 {
+  background-color: var(--cat-2);
+  color: #FFFFFF;
+}
+
+.solved-banner.cat-3 {
+  background-color: var(--cat-3);
+  color: #FFFFFF;
+}
+
+.solved-banner.cat-4 {
+  background-color: var(--cat-4);
+  color: #FFFFFF;
+}
+
+.solved-level-tag {
+  font-size: 11px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.9;
+}
+
+.solved-name {
+  font-family: var(--font-ui);
+  font-size: 15px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.solved-items {
+  font-size: 13.5px;
+  font-weight: 700;
+  opacity: 0.95;
+}
+
+/* 3. Game Board Grid & Granite Curling Tiles */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+
+.tile {
+  appearance: none;
+  background-color: var(--ice-white);
+  color: var(--ice-navy-deep);
+  border: var(--border-thick);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-normal);
+  font-family: var(--font-ui);
+  font-size: clamp(11.5px, 2.8vw, 14px);
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: -0.2px;
+  aspect-ratio: 1.15;
+  min-height: 60px;
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+  word-break: break-word;
+  hyphens: auto;
+  position: relative;
+  transition: transform var(--t-snap), box-shadow var(--t-snap), background-color var(--t-snap), border-color var(--t-snap), color var(--t-snap);
+}
+
+.tile:hover:not(:disabled) {
+  background-color: var(--ice-bg-subtle);
+  border-color: var(--ice-navy-marking);
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px var(--ice-navy-deep);
+}
+
+/* Signature UI Effect 5: Stone Interaction Impact */
+.tile:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: var(--shadow-active);
+  background-color: var(--ice-bg-mid);
+}
+
+.tile.selected {
+  background-color: var(--ice-navy-deep);
+  color: var(--ice-white);
+  border-color: var(--canadian-red);
+  box-shadow: 3px 3px 0px var(--canadian-red), 0 0 10px var(--stone-red-glow);
+  transform: translate(-1px, -1px);
+}
+
+.tile.shake {
+  animation: stoneRebound 0.36s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes stoneRebound {
+  10%, 90% { transform: translate3d(-3px, 0, 0); }
+  20%, 80% { transform: translate3d(4px, 0, 0); }
+  30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+  40%, 60% { transform: translate3d(4px, 0, 0); }
+}
+
+/* 4. Supporting Text & Controls BELOW Board */
+.supporting-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  margin-top: 6px;
+}
+
+.gameplay-prompt {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ice-navy-mid);
+}
+
+.controls-row {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+}
+
+/* ==========================================================================
+   BUTTONS (ADVANCED LIGHT NEO-BRUTALIST TACTILE CONTROLS)
+   ========================================================================== */
+
+.btn {
+  appearance: none;
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 800;
+  padding: 11px 18px;
+  border-radius: var(--radius-md);
+  border: var(--border-thick);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  line-height: 1.2;
+  box-shadow: var(--shadow-normal);
+  position: relative;
+  transition: transform var(--t-snap), box-shadow var(--t-snap), background-color var(--t-snap), color var(--t-snap), border-color var(--t-snap);
+}
+
+.btn:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px var(--ice-navy-deep);
+}
+
+.btn:active:not(:disabled) {
+  transform: translate(2px, 2px);
+  box-shadow: var(--shadow-active);
+}
+
+.btn-primary {
+  background-color: var(--ice-navy-deep);
+  color: var(--ice-white);
+  border-color: var(--ice-navy-deep);
+}
+
+.btn-primary:hover:not(:disabled) {
+  background-color: var(--ice-navy-marking);
+}
+
+/* Red Stone Accent Button Impact */
+.stone-button.red-impact {
+  background-color: var(--canadian-red);
+  color: var(--ice-white);
+  border-color: var(--ice-navy-deep);
+}
+
+.stone-button.red-impact:hover:not(:disabled) {
+  background-color: var(--stone-red);
+  box-shadow: 4px 4px 0px var(--ice-navy-deep), 0 0 14px var(--stone-red-glow);
+}
+
+/* Yellow Stone Accent Button Impact */
+.stone-button.yellow-impact {
+  background-color: var(--stone-yellow);
+  color: var(--ice-navy-deep);
+  border-color: var(--ice-navy-deep);
+}
+
+.stone-button.yellow-impact:hover:not(:disabled) {
+  background-color: var(--stone-yellow-bright);
+  box-shadow: 4px 4px 0px var(--ice-navy-deep), 0 0 14px var(--stone-yellow-glow);
+}
+
+.btn-secondary {
+  background-color: var(--ice-white);
+  color: var(--ice-navy-deep);
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background-color: var(--ice-bg-subtle);
+}
+
+.btn-outline {
+  background-color: transparent;
+  color: var(--ice-navy-deep);
+  border: var(--border-subtle);
+  box-shadow: 2px 2px 0px var(--ice-navy-deep);
+}
+
+.btn-outline:hover {
+  background-color: rgba(255, 255, 255, 0.8);
+  border-color: var(--canadian-red);
+}
+
+.btn-sm {
+  padding: 6px 14px;
+  font-size: 13px;
+  box-shadow: 2px 2px 0px var(--ice-navy-deep);
+}
+
+.btn-full {
+  width: 100%;
+}
+
+.btn:disabled {
+  background-color: var(--ice-bg-mid);
+  color: var(--ice-navy-subtle);
+  border-color: var(--ice-marking-line);
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.65;
+  transform: none !important;
+}
+
+/* ==========================================================================
+   VAULT SCREEN (TOURNAMENT ARCHIVE)
+   ========================================================================== */
+
+.vault-lead {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--ice-navy-mid);
+  margin-bottom: 4px;
 }
 
 .vault-list {
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
-  padding-bottom: var(--space-4);
+  gap: 10px;
+  overflow-y: auto;
+  padding-right: 2px;
+  max-height: 60vh;
 }
 
-.vault-card {
-  padding: var(--space-3) var(--space-4);
+.vault-item {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
+  padding: 13px 16px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  border: var(--border-thick);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-normal);
   cursor: pointer;
-  transition: transform var(--transition-fast), background var(--transition-fast);
-}
-
-.vault-card:active {
-  transform: translateY(2px);
-}
-
-.vault-card-left {
-  display: flex;
-  flex-direction: column;
-}
-
-.vault-card-title {
-  font-size: 0.98rem;
   font-weight: 800;
-  color: var(--ink-primary);
+  font-variant-numeric: tabular-nums;
+  transition: transform var(--t-snap), box-shadow var(--t-snap), border-color var(--t-snap);
 }
 
-.vault-card-date {
-  font-size: 0.78rem;
-  color: var(--ink-muted);
-  font-weight: 600;
+.vault-item:hover {
+  background: var(--ice-white);
+  border-color: var(--canadian-red);
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px var(--ice-navy-deep);
 }
 
-.vault-card-status {
-  font-size: 0.74rem;
-  font-weight: 800;
+.vault-item:active {
+  transform: translate(2px, 2px);
+  box-shadow: var(--shadow-active);
+}
+
+.badge {
+  font-size: 11px;
+  font-weight: 900;
   padding: 4px 10px;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-sm);
+  border: 1.5px solid var(--ice-navy-deep);
   text-transform: uppercase;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.5px;
 }
 
-.status-solved {
-  background: #dcfce7;
-  color: #15803d;
-  border: 1px solid #86efac;
+.badge-won {
+  background-color: var(--cat-2);
+  color: #FFFFFF;
 }
 
-.status-unsolved {
-  background: #f1f5f9;
-  color: #475569;
-  border: 1px solid #cbd5e1;
+.badge-lost {
+  background-color: var(--canadian-red);
+  color: #FFFFFF;
+}
+
+.badge-unplayed {
+  background-color: var(--ice-bg-mid);
+  color: var(--ice-navy-deep);
 }
 
 /* ==========================================================================
-   MODALS SYSTEM & SHIELD HARDENING
+   MODALS: HOW TO PLAY, STATS, RESULTS
    ========================================================================== */
 
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(16, 47, 74, 0.45);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  z-index: 100;
+  background-color: rgba(6, 21, 36, 0.65);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: var(--space-4);
-  animation: fadeIn 0.2s ease;
+  padding: 16px;
+  z-index: 200;
+  animation: modalFadeIn var(--t-settle);
 }
 
-.modal-backdrop[hidden] {
-  display: none !important;
-  pointer-events: none !important;
+@keyframes modalFadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
 }
 
 .modal-card {
+  background: var(--ice-white);
+  border: var(--border-thick);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-elevated);
   width: 100%;
-  max-width: 440px;
-  padding: var(--space-5);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-4);
-  max-height: 90vh;
-  overflow-y: auto;
+  max-width: 430px;
+  overflow: hidden;
+  position: relative;
+  animation: modalScaleUp var(--t-settle);
+}
+
+@keyframes modalScaleUp {
+  from { transform: scale(0.94) translateY(8px); }
+  to   { transform: scale(1) translateY(0); }
 }
 
 .modal-header {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
+  padding: 14px 18px;
+  background: var(--ice-bg-subtle);
+  border-bottom: var(--border-thick);
 }
 
-.modal-title {
-  font-size: 1.25rem;
+.modal-header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modal-leaf-icon {
+  width: 20px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.modal-header h2 {
+  font-family: var(--font-display);
+  font-size: 19px;
   font-weight: 900;
-  color: var(--ink-primary);
+  color: var(--ice-navy-deep);
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 26px;
+  font-weight: 800;
+  color: var(--ice-navy-deep);
+  cursor: pointer;
+  line-height: 1;
+  padding: 0 4px;
+  transition: transform var(--t-snap), color var(--t-snap);
+}
+
+.btn-close:hover {
+  color: var(--canadian-red);
+  transform: scale(1.15);
 }
 
 .modal-body {
+  padding: 18px;
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
-  font-size: 0.9rem;
-  color: var(--ink-primary);
+  gap: 14px;
+  font-size: 14px;
+  color: var(--ice-navy-deep);
   line-height: 1.5;
 }
 
 .help-list {
-  padding-left: var(--space-4);
+  padding-left: 20px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 8px;
+}
+
+.category-heading {
+  font-size: 13px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--canadian-red);
+  margin-top: 4px;
 }
 
 .category-legend {
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  margin-top: var(--space-2);
+  gap: 7px;
 }
 
 .legend-row {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
-  padding: 6px 10px;
-  border-radius: var(--radius-sm);
-  border: 1px solid transparent;
+  gap: 10px;
+  font-size: 13px;
+  font-weight: 700;
 }
 
-.legend-row.tier-1 { background: var(--tier-1-bg); border-color: var(--tier-1-border); color: var(--tier-1-text); }
-.legend-row.tier-2 { background: var(--tier-2-bg); border-color: var(--tier-2-border); color: var(--tier-2-text); }
-.legend-row.tier-3 { background: var(--tier-3-bg); border-color: var(--tier-3-border); color: var(--tier-3-text); }
-.legend-row.tier-4 { background: var(--tier-4-bg); border-color: var(--tier-4-border); color: var(--tier-4-text); }
-
-.legend-badge {
-  font-size: 0.74rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  min-width: 110px;
+.swatch {
+  width: 18px;
+  height: 18px;
+  border: 1.5px solid var(--ice-navy-deep);
+  border-radius: 4px;
+  flex-shrink: 0;
+  box-shadow: 1px 1px 0px var(--ice-navy-deep);
 }
 
-.legend-desc {
-  font-size: 0.78rem;
-  font-weight: 600;
-}
+.swatch.cat-1 { background-color: var(--cat-1); }
+.swatch.cat-2 { background-color: var(--cat-2); }
+.swatch.cat-3 { background-color: var(--cat-3); }
+.swatch.cat-4 { background-color: var(--cat-4); }
 
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: var(--space-3);
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  text-align: center;
 }
 
-.stat-box {
-  padding: var(--space-4);
-  text-align: center;
+.stat-cell {
+  background: var(--ice-bg-subtle);
+  border: var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 10px 4px;
   display: flex;
   flex-direction: column;
   gap: 4px;
+  box-shadow: 1px 1px 0px var(--ice-navy-deep);
 }
 
-.stat-val {
-  font-size: 1.8rem;
+.stat-number {
+  font-family: var(--font-display);
+  font-size: 22px;
   font-weight: 900;
-  color: var(--ink-primary);
+  color: var(--ice-navy-deep);
 }
 
-.stat-lbl {
-  font-size: 0.76rem;
-  color: var(--ink-muted);
-  text-transform: uppercase;
+.stat-label {
+  font-size: 10.5px;
   font-weight: 800;
+  color: var(--ice-navy-subtle);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.result-card {
-  text-align: center;
-}
-
-.result-outcome-msg {
-  font-size: 1.15rem;
+.result-headline {
+  font-family: var(--font-display);
+  font-size: 20px;
   font-weight: 900;
-  color: var(--ink-primary);
+  color: var(--ice-navy-deep);
 }
 
-.result-emoji-grid {
+.result-grid {
+  font-size: 26px;
+  letter-spacing: 6px;
+  line-height: 1.5;
+  margin: 10px 0;
+}
+
+.result-actions {
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  align-items: center;
-  margin: var(--space-3) 0;
-  font-size: 1.35rem;
-  line-height: 1;
+  gap: 10px;
 }
 
-.result-footer {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.text-center {
+  text-align: center;
 }
 
 /* ==========================================================================
-   RESPONSIVE & ACCESSIBILITY OPTIMIZATIONS
+   TOAST NOTIFICATION
    ========================================================================== */
 
-@media (max-width: 380px) {
-  :root {
-    --space-4: 12px;
-    --space-5: 16px;
-  }
-  .word-tile {
-    min-height: 56px;
-    font-size: 0.72rem;
-  }
-  .game-title {
-    font-size: 1.85rem;
-  }
+.toast {
+  position: fixed;
+  top: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: var(--ice-navy-deep);
+  color: var(--ice-white);
+  border: 2px solid var(--canadian-red);
+  box-shadow: var(--shadow-normal), 0 0 14px var(--stone-red-glow);
+  padding: 10px 22px;
+  border-radius: var(--radius-md);
+  font-size: 14px;
+  font-weight: 800;
+  z-index: 400;
+  pointer-events: none;
+  animation: toastPop var(--t-settle);
 }
 
+@keyframes toastPop {
+  from { opacity: 0; transform: translate(-50%, -10px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* ==========================================================================
+   RESPONSIVENESS & ACCESSIBILITY
+   ========================================================================== */
+
+/* Short screen / mobile adjustments */
+@media (max-height: 720px) {
+  .app-header { margin-bottom: 8px; padding: 6px 10px; }
+  .screen { gap: 10px; }
+  .tile { aspect-ratio: 1.3; min-height: 50px; font-size: 12px; }
+  .solved-banner { padding: 8px 6px; }
+  .supporting-zone { gap: 8px; }
+  .nav-card { padding: 14px 12px; gap: 8px; }
+}
+
+/* Reduced Motion Compliance */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
-    animation-duration: 0.01ms !important;
+    animation-duration: 0.001ms !important;
     animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+    transition-duration: 0.001ms !important;
+  }
+  .floating-motif {
+    display: none !important;
+  }
+  .ice-light-sweep-overlay {
+    animation: none !important;
   }
 }
