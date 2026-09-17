@@ -4,8 +4,8 @@
   // Config & Constants
   const STORAGE_KEY = 'connections_save_v1';
   const MAX_MISTAKES = 4;
-  const LEVEL_EMOJIS = { 1: '🟨', 2: '🟩', 3: '🟦', 4: '🟥' };
-  const HOME_PLACEHOLDER_URL = 'https://tileworksgamesstudio.github.io/Curling-Menu/';
+  const LEVEL_EMOJIS = { 1: '🟨', 2: '🟩', 3: '🟦', 4: '🟪' };
+  const HOME_PLACEHOLDER_URL = '#home-placeholder'; // Replace with supplied main-page URL
 
   // Runtime State
   let puzzles = [];
@@ -20,6 +20,7 @@
   let guessHistory = [];
   let isComplete = false;
   let isWon = false;
+  let lastCardTapTime = 0;
 
   // DOM Elements
   const screens = {
@@ -57,241 +58,10 @@
     statPlayed: document.getElementById('stat-played'),
     statWinPct: document.getElementById('stat-win-pct'),
     statStreak: document.getElementById('stat-streak'),
-    statMaxStreak: document.getElementById('stat-max-streak'),
-    ambientLayer: document.getElementById('ambient-curling-layer'),
-    btnSoundToggle: document.getElementById('btn-sound-toggle')
+    statMaxStreak: document.getElementById('stat-max-streak')
   };
 
-  // =========================================================================
-  // LUXURY WEB AUDIO SOUND SYSTEM (Subtle, Safe, Synthesized)
-  // =========================================================================
-  let audioCtx = null;
-  let soundEnabled = true;
-
-  function initAudio() {
-    if (!audioCtx && (window.AudioContext || window.webkitAudioContext)) {
-      try {
-        const AudioClass = window.AudioContext || window.webkitAudioContext;
-        audioCtx = new AudioClass();
-      } catch (e) {
-        soundEnabled = false;
-      }
-    }
-    if (audioCtx && audioCtx.state === 'suspended') {
-      audioCtx.resume().catch(() => {});
-    }
-  }
-
-  function playUiSound(type) {
-    if (!soundEnabled || !audioCtx) return;
-    try {
-      if (audioCtx.state === 'suspended') {
-        audioCtx.resume().catch(() => {});
-      }
-      const now = audioCtx.currentTime;
-
-      if (type === 'tick') {
-        // High crisp contact tick (Stone touch)
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(1400, now);
-        osc.frequency.exponentialRampToValueAtTime(800, now + 0.025);
-        gain.gain.setValueAtTime(0.04, now);
-        gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.025);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(now);
-        osc.stop(now + 0.025);
-      } else if (type === 'stone-tap') {
-        // Muted curling stone impact
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(180, now);
-        osc.frequency.exponentialRampToValueAtTime(50, now + 0.07);
-        gain.gain.setValueAtTime(0.12, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.07);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(now);
-        osc.stop(now + 0.07);
-      } else if (type === 'nav') {
-        // Ice glide frequency shimmer
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(320, now);
-        osc.frequency.exponentialRampToValueAtTime(480, now + 0.08);
-        gain.gain.setValueAtTime(0.06, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(now);
-        osc.stop(now + 0.08);
-      } else if (type === 'success') {
-        // Two-tone bell harmonic chime
-        [523.25, 659.25].forEach((freq, idx) => {
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, now + idx * 0.09);
-          gain.gain.setValueAtTime(0.09, now + idx * 0.09);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.09 + 0.28);
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc.start(now + idx * 0.09);
-          osc.stop(now + idx * 0.09 + 0.28);
-        });
-      } else if (type === 'error') {
-        // Muted low warning bump
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(130, now);
-        osc.frequency.linearRampToValueAtTime(95, now + 0.15);
-        gain.gain.setValueAtTime(0.09, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(now);
-        osc.stop(now + 0.15);
-      } else if (type === 'win') {
-        // 3-note victory championship flourish
-        [440, 554.37, 659.25].forEach((freq, idx) => {
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'sine';
-          osc.frequency.setValueAtTime(freq, now + idx * 0.12);
-          gain.gain.setValueAtTime(0.12, now + idx * 0.12);
-          gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.4);
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc.start(now + idx * 0.12);
-          osc.stop(now + idx * 0.12 + 0.4);
-        });
-      }
-    } catch (e) {
-      // Fail silently without disrupting user interaction
-    }
-  }
-
-  // =========================================================================
-  // 12 DISTINCT CURLING ICONS + AUTHORITATIVE MAPLE LEAF SYSTEM
-  // =========================================================================
-  const CURLING_ICONS = [
-    // 1. Curling Stone
-    '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><ellipse cx="50" cy="65" rx="38" ry="22"/><ellipse cx="50" cy="58" rx="28" ry="14"/><path d="M42 50 V34 H64 V44"/></svg>',
-    // 2. Curling House / Rings
-    '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="4"><circle cx="50" cy="50" r="44"/><circle cx="50" cy="50" r="30"/><circle cx="50" cy="50" r="16"/><circle cx="50" cy="50" r="5" fill="currentColor"/><line x1="50" y1="2" x2="50" y2="98" stroke-width="2"/><line x1="2" y1="50" x2="98" y2="50" stroke-width="2"/></svg>',
-    // 3. Curling Broom
-    '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"><line x1="82" y1="18" x2="36" y2="68"/><rect x="18" y="66" width="30" height="14" rx="3" transform="rotate(-35 33 73)" fill="currentColor"/></svg>',
-    // 4. Brush Head
-    '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5"><rect x="15" y="32" width="70" height="36" rx="8"/><line x1="28" y1="32" x2="28" y2="68"/><line x1="50" y1="32" x2="50" y2="68"/><line x1="72" y1="32" x2="72" y2="68"/><circle cx="50" cy="22" r="6"/></svg>',
-    // 5. Hack
-    '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round"><rect x="22" y="35" width="22" height="38" rx="3"/><rect x="56" y="35" width="22" height="38" rx="3"/><line x1="22" y1="46" x2="44" y2="46"/><line x1="56" y1="46" x2="78" y2="46"/><line x1="12" y1="78" x2="88" y2="78" stroke-width="6"/></svg>',
-    // 6. Curling Stone Handle
-    '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><path d="M22 68 V45 C22 36 28 32 38 32 H62 C72 32 78 36 78 45 V54"/></svg>',
-    // 7. Hog Line
-    '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="8"><line x1="10" y1="50" x2="90" y2="50"/><line x1="25" y1="35" x2="25" y2="65" stroke-width="4"/><line x1="75" y1="35" x2="75" y2="65" stroke-width="4"/></svg>',
-    // 8. Back Line
-    '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5"><line x1="8" y1="50" x2="92" y2="50" stroke-dasharray="8 6"/><circle cx="50" cy="50" r="12"/></svg>',
-    // 9. Centre Line
-    '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5"><line x1="50" y1="6" x2="50" y2="94"/><line x1="30" y1="50" x2="70" y2="50" stroke-width="3"/></svg>',
-    // 10. Curling Pebble Motif
-    '<svg viewBox="0 0 100 100" fill="currentColor"><circle cx="28" cy="30" r="6"/><circle cx="70" cy="24" r="8"/><circle cx="48" cy="52" r="7"/><circle cx="26" cy="74" r="5"/><circle cx="76" cy="68" r="9"/></svg>',
-    // 11. Scoreboard / End Marker
-    '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5"><rect x="18" y="20" width="64" height="60" rx="4"/><line x1="18" y1="42" x2="82" y2="42"/><line x1="50" y1="20" x2="50" y2="80"/></svg>',
-    // 12. Skip / Throwing Delivery Silhouette
-    '<svg viewBox="0 0 100 100" fill="none" stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"><circle cx="68" cy="30" r="9" fill="currentColor"/><path d="M62 42 L46 54 L20 60"/><path d="M46 54 L52 74 L78 74"/><circle cx="20" cy="68" r="7" fill="currentColor"/></svg>'
-  ];
-
-  // Mandatory Authoritative Maple Leaf SVG Renderer (Derived from Section 65.6)
-  function renderAuthoritativeMapleLeaf() {
-    return `<svg viewBox="0 0 298.72 341.12" aria-hidden="true" focusable="false"><use href="#authoritative-maple-leaf" /></svg>`;
-  }
-
-  function spawnAmbientMotif() {
-    if (!dom.ambientLayer) return;
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-
-    // Keep active element count strictly controlled
-    if (dom.ambientLayer.childElementCount > 18) return;
-
-    const el = document.createElement('div');
-    el.className = 'floating-motif';
-
-    // 3 Perceived Depth Tiers: Distant, Middle, Near
-    const depthRoll = Math.random();
-    let depthClass = 'motif-depth-mid';
-    let baseSize = 34;
-    let opacity = 0.28;
-    let duration = 24 + Math.random() * 12;
-
-    if (depthRoll < 0.38) {
-      depthClass = 'motif-depth-distant';
-      baseSize = 22 + Math.random() * 8;
-      opacity = 0.12 + Math.random() * 0.12;
-      duration = 32 + Math.random() * 14;
-    } else if (depthRoll > 0.78) {
-      depthClass = 'motif-depth-near';
-      baseSize = 42 + Math.random() * 14;
-      opacity = 0.38 + Math.random() * 0.18;
-      duration = 18 + Math.random() * 8;
-    }
-
-    el.classList.add(depthClass);
-
-    // Pick between the 12 curling icons (80% chance) and the authoritative maple leaf (20% chance)
-    const isMapleLeaf = Math.random() < 0.26;
-    if (isMapleLeaf) {
-      el.innerHTML = renderAuthoritativeMapleLeaf();
-    } else {
-      const iconIdx = Math.floor(Math.random() * CURLING_ICONS.length);
-      el.innerHTML = CURLING_ICONS[iconIdx];
-      // Distribute sports colour accents: Dark Navy, Canadian Red, Yellow
-      const colorRoll = Math.random();
-      if (colorRoll < 0.5) {
-        el.style.color = '#0B2138';
-      } else if (colorRoll < 0.8) {
-        el.style.color = '#D71920';
-      } else {
-        el.style.color = '#FFC400';
-      }
-    }
-
-    const startLeft = Math.random() * 94; // % viewport width
-    const driftX = (Math.random() - 0.5) * 70; // px drift
-    const driftRot = (Math.random() - 0.5) * 90; // deg rotation
-
-    el.style.left = `${startLeft}%`;
-    el.style.width = `${baseSize}px`;
-    el.style.height = `${baseSize}px`;
-    el.style.setProperty('--item-opacity', opacity);
-    el.style.setProperty('--drift-x', `${driftX}px`);
-    el.style.setProperty('--drift-rot', `${driftRot}deg`);
-    el.style.animationDuration = `${duration}s`;
-
-    dom.ambientLayer.appendChild(el);
-
-    setTimeout(() => {
-      if (el && el.parentNode) {
-        el.parentNode.removeChild(el);
-      }
-    }, duration * 1000);
-  }
-
-  function startAmbientAtmosphere() {
-    // Initial gentle dispersal
-    for (let i = 0; i < 7; i++) {
-      setTimeout(spawnAmbientMotif, i * 450);
-    }
-    setInterval(spawnAmbientMotif, 2200);
-  }
-
-  // =========================================================================
-  // CSV PARSER & DATA SYSTEM (Protected Logic)
-  // =========================================================================
+  // CSV Parser with quote support
   function parseCSV(text) {
     const rows = [];
     let row = [];
@@ -379,7 +149,9 @@
           return parsed;
         }
       }
-    } catch (e) {}
+    } catch (e) {
+      // Fallback cleanly on parse error or private browsing restrictions
+    }
     return {
       version: 1,
       stats: { played: 0, won: 0, streak: 0, maxStreak: 0 },
@@ -390,7 +162,9 @@
   function saveStorage(state) {
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    } catch (e) {}
+    } catch (e) {
+      // Storage quota or restriction failure handled gracefully
+    }
   }
 
   function getSavedGame(date) {
@@ -432,7 +206,6 @@
 
   // Navigation & Screens
   function showScreen(name) {
-    playUiSound('nav');
     Object.keys(screens).forEach(key => {
       screens[key].classList.toggle('hidden', key !== name);
     });
@@ -440,12 +213,10 @@
   }
 
   function showModal(modal) {
-    playUiSound('nav');
     modal.classList.remove('hidden');
   }
 
   function closeModal(modal) {
-    playUiSound('tick');
     modal.classList.add('hidden');
   }
 
@@ -454,12 +225,11 @@
     dom.toast.textContent = msg;
     dom.toast.classList.remove('hidden');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => dom.toast.classList.add('hidden'), 2200);
+    toastTimer = setTimeout(() => dom.toast.classList.add('hidden'), 2000);
   }
 
   // Gameplay Setup
   function startPuzzle(puzzle, isArchive) {
-    playUiSound('stone-tap');
     activePuzzle = puzzle;
     isArchiveMode = isArchive;
     dom.gamePuzzleTitle.textContent = isArchive ? `Vault: ${puzzle.date}` : `Daily: ${puzzle.date}`;
@@ -513,11 +283,58 @@
       const tile = document.createElement('button');
       tile.type = 'button';
       tile.className = 'tile';
+      tile.style.touchAction = 'manipulation';
       if (selectedWords.includes(word)) tile.classList.add('selected');
       if (isComplete) tile.disabled = true;
       tile.textContent = word;
       tile.setAttribute('aria-pressed', selectedWords.includes(word) ? 'true' : 'false');
-      tile.addEventListener('click', () => toggleSelect(word));
+
+      // Responsive touch handling for immediate single-tap on mobile
+      let startX = 0;
+      let startY = 0;
+      let isMoved = false;
+
+      const handleSelection = (e) => {
+        if (isComplete) return;
+        const now = Date.now();
+        if (now - lastCardTapTime < 350) return;
+        lastCardTapTime = now;
+        toggleSelect(word);
+      };
+
+      tile.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'touch') {
+          startX = e.clientX;
+          startY = e.clientY;
+          isMoved = false;
+        }
+      });
+
+      tile.addEventListener('pointermove', (e) => {
+        if (e.pointerType === 'touch') {
+          if (Math.hypot(e.clientX - startX, e.clientY - startY) > 10) {
+            isMoved = true;
+          }
+        }
+      });
+
+      tile.addEventListener('pointerup', (e) => {
+        if (e.pointerType === 'touch') {
+          if (!isMoved) {
+            e.preventDefault();
+            handleSelection(e);
+          }
+        }
+      });
+
+      tile.addEventListener('pointercancel', () => {
+        isMoved = true;
+      });
+
+      tile.addEventListener('click', (e) => {
+        handleSelection(e);
+      });
+
       dom.grid.appendChild(tile);
     });
 
@@ -538,9 +355,6 @@
 
   function toggleSelect(word) {
     if (isComplete) return;
-    initAudio();
-    playUiSound('tick');
-
     const idx = selectedWords.indexOf(word);
     if (idx > -1) {
       selectedWords.splice(idx, 1);
@@ -548,31 +362,39 @@
       if (selectedWords.length >= 4) return;
       selectedWords.push(word);
     }
-    renderBoard();
+
+    // Update tile state in-place to avoid tearing down active touch targets
+    const tiles = dom.grid.querySelectorAll('.tile');
+    tiles.forEach(tile => {
+      const isSel = selectedWords.includes(tile.textContent);
+      tile.classList.toggle('selected', isSel);
+      tile.setAttribute('aria-pressed', isSel ? 'true' : 'false');
+    });
+
     updateControls();
   }
 
   function deselectAll() {
-    playUiSound('tick');
     selectedWords = [];
-    renderBoard();
+    const tiles = dom.grid.querySelectorAll('.tile');
+    tiles.forEach(tile => {
+      tile.classList.remove('selected');
+      tile.setAttribute('aria-pressed', 'false');
+    });
     updateControls();
   }
 
   function shuffleTiles() {
-    playUiSound('stone-tap');
     shuffleArray(unsolvedWords);
     renderBoard();
   }
 
   function submitGuess() {
     if (selectedWords.length !== 4 || isComplete) return;
-    initAudio();
 
     const guessKey = [...selectedWords].sort().join('|');
     const alreadyGuessed = guessHistory.some(g => [...g].sort().join('|') === guessKey);
     if (alreadyGuessed) {
-      playUiSound('error');
       showToast('Already guessed');
       return;
     }
@@ -591,7 +413,6 @@
     }
 
     if (matchedCat) {
-      playUiSound('success');
       solvedCategories.push(matchedCat);
       unsolvedWords = unsolvedWords.filter(w => !matchedCat.items.includes(w));
       selectedWords = [];
@@ -615,7 +436,6 @@
         updateControls();
       }
     } else {
-      playUiSound('error');
       mistakesRemaining--;
 
       const isOneAway = activePuzzle.categories.some(cat => {
@@ -626,7 +446,7 @@
 
       const domTiles = dom.grid.querySelectorAll('.tile.selected');
       domTiles.forEach(t => t.classList.add('shake'));
-      setTimeout(() => domTiles.forEach(t => t.classList.remove('shake')), 380);
+      setTimeout(() => domTiles.forEach(t => t.classList.remove('shake')), 360);
 
       if (mistakesRemaining <= 0) {
         isComplete = true;
@@ -646,18 +466,15 @@
   }
 
   function finishGame() {
-    if (isWon) {
-      playUiSound('win');
-    }
     saveActiveGame();
     renderBoard();
     updateControls();
     updateMenuStatus();
-    setTimeout(showResultModal, 650);
+    setTimeout(showResultModal, 600);
   }
 
   function showResultModal() {
-    dom.resultMsg.textContent = isWon ? 'Great job! Match Complete.' : 'Revealed. Better luck next end!';
+    dom.resultMsg.textContent = isWon ? 'Great job! Puzzle Solved.' : 'Revealed. Better luck next time!';
     dom.resultGrid.innerHTML = '';
 
     const wordLevelMap = {};
@@ -676,7 +493,6 @@
   }
 
   function shareResult() {
-    playUiSound('stone-tap');
     const wordLevelMap = {};
     activePuzzle.categories.forEach(cat => {
       cat.items.forEach(item => { wordLevelMap[item] = cat.level; });
@@ -686,7 +502,7 @@
       guess.map(w => LEVEL_EMOJIS[wordLevelMap[w]] || '⬜').join('')
     );
 
-    const shareText = `Connections — Canadian Curling Edition\nPuzzle: ${activePuzzle.date}\n${lines.join('\n')}`;
+    const shareText = `Connections\nPuzzle: ${activePuzzle.date}\n${lines.join('\n')}`;
 
     if (navigator.clipboard && navigator.clipboard.writeText) {
       navigator.clipboard.writeText(shareText).then(() => showToast('Copied to clipboard'));
@@ -714,6 +530,7 @@
     }
   }
 
+  // Vault Archive (Section 5: Daily puzzle excluded from historical archive)
   function renderVault() {
     dom.vaultList.innerHTML = '';
     const archivePuzzles = puzzles.filter(p => p.date <= todayPuzzle.date && p.date !== todayPuzzle.date);
@@ -774,33 +591,9 @@
       .replace(/"/g, '&quot;');
   }
 
-  // Sound Toggle Control
-  function toggleSound() {
-    soundEnabled = !soundEnabled;
-    if (dom.btnSoundToggle) {
-      dom.btnSoundToggle.querySelector('.sound-icon').textContent = soundEnabled ? '🔊' : '🔇';
-      dom.btnSoundToggle.setAttribute('aria-label', soundEnabled ? 'Mute UI Audio' : 'Unmute UI Audio');
-    }
-    if (soundEnabled) {
-      initAudio();
-      playUiSound('tick');
-    }
-  }
-
   // Initialization & Event Binding
   async function init() {
     dom.btnHome.setAttribute('href', HOME_PLACEHOLDER_URL);
-
-    // One-time interaction hook to safely unlock Web Audio
-    const unlockAudio = () => {
-      initAudio();
-      window.removeEventListener('pointerdown', unlockAudio);
-      window.removeEventListener('keydown', unlockAudio);
-    };
-    window.addEventListener('pointerdown', unlockAudio, { once: true });
-    window.addEventListener('keydown', unlockAudio, { once: true });
-
-    startAmbientAtmosphere();
 
     try {
       const res = await fetch('puzzles.csv', { cache: 'no-store' });
@@ -835,11 +628,6 @@
   }
 
   function bindEvents() {
-    // Audio toggle
-    if (dom.btnSoundToggle) {
-      dom.btnSoundToggle.addEventListener('click', toggleSound);
-    }
-
     // Universal Navigation Actions
     dom.btnPlayToday.addEventListener('click', () => startPuzzle(todayPuzzle, false));
 
@@ -848,7 +636,7 @@
       showScreen('vault');
     });
 
-    // Return to Menu
+    // Return to Menu from gameplay and vault
     dom.btnGameBack.addEventListener('click', () => {
       updateMenuStatus();
       showScreen('menu');
