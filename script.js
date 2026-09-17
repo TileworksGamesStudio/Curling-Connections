@@ -5,7 +5,7 @@
   const STORAGE_KEY = 'connections_save_v1';
   const MAX_MISTAKES = 4;
   const LEVEL_EMOJIS = { 1: '🟨', 2: '🟩', 3: '🟦', 4: '🟪' };
-  const HOME_PLACEHOLDER_URL = '#home-placeholder'; // Replace with supplied main-page URL
+  const HOME_PLACEHOLDER_URL = 'https://tileworksgamesstudio.github.io/Curling-Menu/'; // Replace with supplied main-page URL
 
   // Runtime State
   let puzzles = [];
